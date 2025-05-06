@@ -1,0 +1,15 @@
+*.obj
+*.so
+*.dylib
+*.dll
+*.vcxproj
+*.filters
+*.vcxproj.user
+*.vcxproj.filters
+*.sln
+
+.vs/
+.git/
+JSON/
+Binaries/*
+Intermediate/*
