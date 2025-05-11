@@ -26,6 +26,8 @@ public class CLWorks : ModuleRules
 			new string[]
 			{
 				"Core",
+
+				"OpenCL",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -36,8 +38,10 @@ public class CLWorks : ModuleRules
 			{
 				"CoreUObject",
 				"Engine",
+				"Projects",
 				"Slate",
 				"SlateCore",
+
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

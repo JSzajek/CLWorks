@@ -1,15 +1,14 @@
-using EpicGames.Core;
 using UnrealBuildTool;
 using System.IO;
 
-public class Assimp : ModuleRules
+public class OpenCL : ModuleRules
 {
 	protected virtual bool IsSupportedWindowsPlatform(ReadOnlyTargetRules Target)
 	{
 		return Target.Platform == UnrealTargetPlatform.Win64;
 	}
 
-	public Assimp(ReadOnlyTargetRules Target) : base(Target)
+	public OpenCL(ReadOnlyTargetRules Target) : base(Target)
 	{
 		Type = ModuleType.External;
 
@@ -24,16 +23,19 @@ public class Assimp : ModuleRules
             PublicSystemIncludePaths.Add(ModulePath + "Include/");
 
             // Include TPL includes path
-            PublicSystemIncludePaths.Add(ThirdPartyLibsPath + "Assimp-5.4.3/include/");
+            PublicSystemIncludePaths.Add(ThirdPartyLibsPath + "OpenCL/include/");
 
             // Add TPL Library and Binaries -------------------------------------------------------
-            PublicAdditionalLibraries.Add(ThirdPartyLibsPath + "Assimp-5.4.3/lib/assimp-vc143-mt.lib");
+            PublicAdditionalLibraries.Add(ThirdPartyLibsPath + "OpenCL/lib/OpenCL.lib");
+            PublicAdditionalLibraries.Add(ThirdPartyLibsPath + "OpenCL/lib/OpenCLExt.lib");
+            PublicAdditionalLibraries.Add(ThirdPartyLibsPath + "OpenCL/lib/OpenCLUtils.lib");
+            PublicAdditionalLibraries.Add(ThirdPartyLibsPath + "OpenCL/lib/OpenCLUtilsCpp.lib");
 
-            string BinPath = Path.Combine(ThirdPartyLibsPath, "Assimp-5.4.3/bin");
-            DirectoryInfo dllinfo2 = new DirectoryInfo(BinPath);
-            if (dllinfo2.Exists)
+            string BinPath = Path.Combine(ThirdPartyLibsPath, "OpenCL/bin");
+            DirectoryInfo binDirectory = new DirectoryInfo(BinPath);
+            if (binDirectory.Exists)
             {
-                FileInfo[] files = dllinfo2.GetFiles("*.dll");
+                FileInfo[] files = binDirectory.GetFiles();
                 foreach (FileInfo file in files)
                 {
                     RuntimeDependencies.Add("$(BinaryOutputDir)/" + file.Name, file.FullName);

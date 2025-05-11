@@ -1,0 +1,3 @@
+[submodule "ThirdParty/OpenCL"]
+	path = ThirdParty/OpenCL
+	url = https://github.com/JSzajek/OpenCL-Lib-fork.git

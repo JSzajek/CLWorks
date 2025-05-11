@@ -18,7 +18,7 @@
 		{
 			"Name": "CLWorks",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "EarliestPossible"
 		}
 	]
 }
