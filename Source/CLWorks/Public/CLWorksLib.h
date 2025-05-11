@@ -4,7 +4,7 @@
 #include "Core/CLContext.h"
 
 #include "Core/CLBuffer.h"
-#include "Core/CLTexture.h"
+#include "Core/CLImage.h"
 
 #include "Core/CLKernel.h"
 #include "Core/CLProgram.h"

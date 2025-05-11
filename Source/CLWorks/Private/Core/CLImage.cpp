@@ -1,4 +1,4 @@
-#include "Core/CLTexture.h"
+#include "Core/CLImage.h"
 
 #include "Core/CLCommandQueue.h"
 
@@ -7,7 +7,7 @@
 namespace OpenCL
 {
 
-	Texture::Texture(const OpenCL::Context& context, 
+	Image::Image(const OpenCL::Context& context, 
 					 const OpenCL::Device& device,
 					 uint32_t width, 
 					 uint32_t height, 
@@ -29,12 +29,12 @@ namespace OpenCL
 			mpImage = CreateCLImage();
 	}
 
-	size_t Texture::GetPixelCount() const
+	size_t Image::GetPixelCount() const
 	{
 		return mWidth * mHeight * mDepthOrLayer;
 	}
 
-	size_t Texture::GetChannelCount() const
+	size_t Image::GetChannelCount() const
 	{
 		if ((mFormat & Format::R) > 0)
 		{
@@ -47,7 +47,7 @@ namespace OpenCL
 		return 0;
 	}
 
-	TObjectPtr<UTexture2D> Texture::CreateUTexture2D()
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D()
 	{
 		void* data = nullptr;
 		ReadFromCL(&data);
@@ -57,37 +57,37 @@ namespace OpenCL
 		return nullptr;
 	}
 
-	bool Texture::UploadToUTexture2D(TObjectPtr<UTexture2D> texture)
+	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> texture)
 	{
 		// TODO:: Implement
 		return false;
 	}
 
-	TObjectPtr<UTexture2DArray> Texture::CreateUTexture2DArray()
+	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray()
 	{
 		// TODO:: Implement
 		return nullptr;
 	}
 
-	bool Texture::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture)
+	bool Image::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture)
 	{
 		// TODO:: Implement
 		return false;
 	}
 
-	TObjectPtr<UVolumeTexture> Texture::CreateUVolumeTexture()
+	TObjectPtr<UVolumeTexture> Image::CreateUVolumeTexture()
 	{
 		// TODO:: Implement
 		return nullptr;
 	}
 
-	bool Texture::UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> texture)
+	bool Image::UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> texture)
 	{
 		// TODO:: Implement
 		return false;
 	}
 
-	cl_mem Texture::CreateCLImage()
+	cl_mem Image::CreateCLImage()
 	{
 		cl_image_desc desc = {};
 		desc.image_width = mWidth;
@@ -178,7 +178,7 @@ namespace OpenCL
 		return img;
 	}
 
-	bool Texture::ReadFromCL(void** output,
+	bool Image::ReadFromCL(void** output,
 						     cl_command_queue overrideQueue,
 						     bool isBlocking) const
 	{
@@ -254,7 +254,7 @@ namespace OpenCL
 		return true;
 	}
 
-	bool Texture::WriteToUTexture(TObjectPtr<UTexture> texture)
+	bool Image::WriteToUTexture(TObjectPtr<UTexture> texture)
 	{
 		
 		return false;

@@ -349,13 +349,13 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Texture cltexture(context,
+			OpenCL::Image cltexture(context,
 									  mDefaultDevice,
 									  256, 
 									  256, 
 									  1,		
-									  OpenCL::Texture::Format::RGBA8, 
-									  OpenCL::Texture::Type::Texture2D);
+									  OpenCL::Image::Format::RGBA8, 
+									  OpenCL::Image::Type::Texture2D);
 
 			TestNotNull(TEXT("Failed Texture2D Creation!"), cltexture.Get());
 		});
@@ -365,13 +365,13 @@ void FCLUnitTestsSpecs::Define()
 			OpenCL::Context context(mDefaultDevice);
 			OpenCL::Program program(mDefaultDevice, context);
 
-			OpenCL::Texture cltexture(context,
+			OpenCL::Image cltexture(context,
 									  mDefaultDevice,
 									  256, 
 									  256, 
 									  1,		
-									  OpenCL::Texture::Format::RGBA8, 
-									  OpenCL::Texture::Type::Texture2D,
+									  OpenCL::Image::Format::RGBA8, 
+									  OpenCL::Image::Type::Texture2D,
 									  OpenCL::AccessType::READ_WRITE);
 
 			program.ReadFromString("__kernel void write_red_img(read_write image2d_t output)\n" 

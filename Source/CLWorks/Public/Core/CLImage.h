@@ -9,7 +9,7 @@ class UVolumeTexture;
 
 namespace OpenCL
 {
-	class Texture
+	class Image
 	{
 		friend class CommandQueue;
 	public:
@@ -49,7 +49,7 @@ namespace OpenCL
 			COUNT
 		};
 	public:
-		Texture(const OpenCL::Context& context,
+		Image(const OpenCL::Context& context,
 				const OpenCL::Device& device,
 				uint32_t width,
 				uint32_t height,

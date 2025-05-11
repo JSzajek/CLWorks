@@ -71,7 +71,7 @@ namespace OpenCL
 		}
 	}
 
-	void CommandQueue::ReadImageTo(const OpenCL::Texture& image, 
+	void CommandQueue::ReadImageTo(const OpenCL::Image& image, 
 								   void* output, 
 								   bool isBlocking)
 	{
@@ -80,7 +80,7 @@ namespace OpenCL
 						 isBlocking);
 	}
 
-	void* CommandQueue::ReadImage(const OpenCL::Texture& image, 
+	void* CommandQueue::ReadImage(const OpenCL::Image& image, 
 								  bool isBlocking)
 	{
 		void* output = nullptr;

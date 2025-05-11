@@ -6,7 +6,7 @@
 #include "Core/CLKernel.h"
 
 #include "Core/CLBuffer.h"
-#include "Core/CLTexture.h"
+#include "Core/CLImage.h"
 
 namespace OpenCL
 {
@@ -35,11 +35,11 @@ namespace OpenCL
 						void* output,
 						bool isBlocking = true);
 
-		void ReadImageTo(const OpenCL::Texture& image,
+		void ReadImageTo(const OpenCL::Image& image,
 						 void* output,
 						 bool isBlocking = true);
 
-		void* ReadImage(const OpenCL::Texture& image,
+		void* ReadImage(const OpenCL::Image& image,
 					    bool isBlocking = true);
 	private:
 		void Initialize(cl_context context, 
