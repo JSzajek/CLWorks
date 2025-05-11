@@ -48,11 +48,11 @@ The plugin utilizes Unreal Engine automation framework's SPECs(). It is possible
  - C++20 compatible compiler.
 
 ### Future Roadmap
-[] Texture2DArray Support
-[] Texture3D Support
-[] Blueprint Exposure
-[] Benchmarking Framework
-[] Asynchronous Data Transfer
+- [ ] Texture2DArray Support
+- [ ] Texture3D Support
+- [ ] Blueprint Exposure
+- [ ] Benchmarking Framework
+- [ ] Asynchronous Data Transfer
 
 ### License
 Licenses Under the **Apache 2.0** License.
