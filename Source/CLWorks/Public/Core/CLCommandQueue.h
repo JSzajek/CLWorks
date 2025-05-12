@@ -10,7 +10,7 @@
 
 namespace OpenCL
 {
-	class CommandQueue
+	class CLWORKS_API CommandQueue
 	{
 	public:
 		CommandQueue(const OpenCL::Context& context, 
@@ -24,6 +24,8 @@ namespace OpenCL
 		cl_command_queue Get() const { return mpCommandQueue; };
 
 		bool IsValid() const { return mIsValid; }
+
+		void WaitForFinish() const;
 
 		void EnqueueRange(const OpenCL::Kernel& kernel, 
 						  size_t work_dim, 

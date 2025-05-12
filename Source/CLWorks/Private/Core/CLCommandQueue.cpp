@@ -27,7 +27,12 @@ namespace OpenCL
 		}
 	}
 
-	void CommandQueue::EnqueueRange(const OpenCL::Kernel& kernel, 
+	void CommandQueue::WaitForFinish() const
+	{
+		clFinish(mpCommandQueue);
+	}
+
+	void CommandQueue::EnqueueRange(const OpenCL::Kernel& kernel,
 									size_t work_dim, 
 									const size_t* global_work_size,
 									const size_t* local_work_size)

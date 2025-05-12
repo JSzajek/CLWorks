@@ -1,17 +1,23 @@
 #include "Core/CLImage.h"
 
+#include "CLWorksLog.h"
+
 #include "Core/CLCommandQueue.h"
 
-#include "CLWorksLog.h"
+#include "Engine/Texture2D.h"
+#include "Engine/Texture2DArray.h"
+#include "Engine/VolumeTexture.h"
+
+#include "RHICommandList.h"
 
 namespace OpenCL
 {
 
 	Image::Image(const OpenCL::Context& context, 
 					 const OpenCL::Device& device,
-					 uint32_t width, 
-					 uint32_t height, 
-					 uint32_t depthOrLayer, 
+					 uint32_t width,
+					 uint32_t height,
+					 uint32_t depthOrLayer,
 					 Format format,
 					 Type type,
 					 AccessType access)
@@ -47,20 +53,119 @@ namespace OpenCL
 		return 0;
 	}
 
-	TObjectPtr<UTexture2D> Image::CreateUTexture2D()
+	size_t Image::GetDataSize() const
 	{
-		void* data = nullptr;
-		ReadFromCL(&data);
-
-		// TODO:: Implement Texture Creation and Upload
-
-		return nullptr;
+		if ((mFormat & Format::UChar) > 0)
+			return GetPixelCount() * GetChannelCount() * sizeof(uint8_t);
+		else if ((mFormat & Format::HalfFloat) > 0)
+			return GetPixelCount() * GetChannelCount() * sizeof(FFloat16);
+		else if ((mFormat & Format::Float) > 0)
+			return GetPixelCount() * GetChannelCount() * sizeof(float);
+		return 0;
 	}
 
-	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> texture)
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D(const OpenCL::CommandQueue& queue)
 	{
-		// TODO:: Implement
-		return false;
+		return CreateUTexture2D(queue.Get());
+	}
+
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D(cl_command_queue queueOverride)
+	{
+		if (!mpImage)
+			return nullptr;
+
+		EPixelFormat pixelFormat = PF_Unknown;
+		switch (mFormat)
+		{
+			case Format::R8:
+				pixelFormat = PF_R8;
+				break;
+			case Format::RGBA8:
+				pixelFormat = PF_R8G8B8A8;
+				break;
+			case Format::R16F:
+				pixelFormat = PF_R16F;
+				break;
+			case Format::RGBA16F:
+				pixelFormat = PF_FloatRGBA;
+				break;
+			case Format::R32F:
+				pixelFormat = PF_R32_FLOAT;
+				break;
+			case Format::RGBA32F:
+				pixelFormat = PF_A32B32G32R32F;
+				break;
+			default:
+				UE_LOG(LogCLWorks, Warning, TEXT("Creation CL Image Invalid Texture Format: %d!"), mFormat);
+				return nullptr;
+		}
+
+
+		void* pixelData = nullptr;
+		if (!ReadFromCL(&pixelData, queueOverride))
+			return nullptr;
+
+		const size_t dataSize = GetDataSize();
+
+		UTexture2D* texture = UTexture2D::CreateTransient(mWidth, mHeight, pixelFormat);
+
+		FTexture2DMipMap& mip = texture->GetPlatformData()->Mips[0];
+		mip.BulkData.Lock(LOCK_READ_WRITE);
+		void* DestImageData = mip.BulkData.Realloc(dataSize);
+		FMemory::Memcpy(DestImageData, pixelData, dataSize);
+		mip.BulkData.Unlock();
+
+		// Trigger render resource update
+		texture->UpdateResource();
+		
+		// Clean up memory
+		delete[] pixelData;
+
+		return texture;
+	}
+
+	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> texture, 
+								   const OpenCL::CommandQueue& queue)
+	{
+		return UploadToUTexture2D(texture, queue.Get());
+	}
+
+	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> output,
+								   cl_command_queue queueOverride)
+	{
+		const size_t output_width = output->GetSizeX();
+		const size_t output_height = output->GetSizeY();
+		if (output_width != mWidth || output_height != mHeight)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture with Size: %d x %d to Output Size: %d x %d!"), mWidth, mHeight, output_width, output_height);
+			return false;
+		}
+
+		const size_t internal_dataSize = GetDataSize();
+		const size_t output_dataSize = output_width * output_height * GPixelFormats[output->GetPixelFormat()].BlockBytes;
+		if (internal_dataSize != output_dataSize)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture Format - Input Data Size: %d to Output Data Size: %d!"), internal_dataSize, output_dataSize);
+			return false;
+		}
+
+		void* pixelData = nullptr;
+		if (!ReadFromCL(&pixelData, queueOverride))
+			return false;
+
+		FTexture2DMipMap& mip = output->GetPlatformData()->Mips[0];
+		mip.BulkData.Lock(LOCK_READ_WRITE);
+		void* DestImageData = mip.BulkData.Realloc(internal_dataSize);
+		FMemory::Memcpy(DestImageData, pixelData, internal_dataSize);
+		mip.BulkData.Unlock();
+
+		// Trigger render resource update
+		output->UpdateResource();
+
+		// Clean up memory
+		delete[] pixelData;
+
+		return true;
 	}
 
 	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray()
@@ -179,8 +284,8 @@ namespace OpenCL
 	}
 
 	bool Image::ReadFromCL(void** output,
-						     cl_command_queue overrideQueue,
-						     bool isBlocking) const
+						   cl_command_queue overrideQueue,
+						   bool isBlocking) const
 	{
 		const size_t origin[3] = { 0, 0, 0 };
 		const size_t region[3] = { mWidth, mHeight, mDepthOrLayer };
@@ -189,7 +294,7 @@ namespace OpenCL
 		size_t channelCount = GetChannelCount();
 
 		void* data = nullptr;
-		if (output == nullptr)
+		if (*output == nullptr)
 		{
 			if ((mFormat & Format::UChar) > 0)
 			{
@@ -197,7 +302,7 @@ namespace OpenCL
 			}
 			else if ((mFormat & Format::HalfFloat) > 0)
 			{
-				// TODO:: Implement
+				data = new FFloat16[pixelCount * channelCount];
 			}
 			else if ((mFormat & Format::Float) > 0)
 			{
@@ -208,6 +313,8 @@ namespace OpenCL
 				UE_LOG(LogCLWorks, Warning, TEXT("Invalid Image Data Format"));
 				return false;
 			}
+
+			*output = data;
 		}
 		else
 		{
@@ -222,7 +329,7 @@ namespace OpenCL
 									 isBlocking ? CL_TRUE : CL_FALSE,
 									 origin, 
 									 region, 
-									 256 * channelCount, 
+									 0, 
 									 0, 
 									 data,
 									 0, 
@@ -237,15 +344,14 @@ namespace OpenCL
 									 isBlocking ? CL_TRUE : CL_FALSE,
 									 origin, 
 									 region, 
-									 0, 
-									 0, 
-									 data, 
-									 0, 
+									 0,
+									 0,
+									 data,
+									 0,
 									 nullptr, 
 									 nullptr);
 		}
 
-		
 		if (err < 0)
 		{
 			UE_LOG(LogCLWorks, Error, TEXT("Failed Reading Image: %d"), err);

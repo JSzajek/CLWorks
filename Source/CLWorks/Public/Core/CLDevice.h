@@ -6,7 +6,7 @@
 
 namespace OpenCL
 {
-	class Device
+	class CLWORKS_API Device
 	{
 	public:
 		Device();

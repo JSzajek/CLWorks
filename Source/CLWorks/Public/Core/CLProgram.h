@@ -9,7 +9,7 @@
 
 namespace OpenCL
 {
-	class Program
+	class CLWORKS_API Program
 	{
 	public:
 		Program(const OpenCL::Device& device,

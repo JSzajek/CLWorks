@@ -6,7 +6,7 @@
 
 namespace OpenCL
 {
-	class Kernel
+	class CLWORKS_API Kernel
 	{
 	public:
 		Kernel(const OpenCL::Program& program, 

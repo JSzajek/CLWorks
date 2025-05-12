@@ -9,7 +9,7 @@ class UVolumeTexture;
 
 namespace OpenCL
 {
-	class Image
+	class CLWORKS_API Image
 	{
 		friend class CommandQueue;
 	public:
@@ -50,13 +50,13 @@ namespace OpenCL
 		};
 	public:
 		Image(const OpenCL::Context& context,
-				const OpenCL::Device& device,
-				uint32_t width,
-				uint32_t height,
-				uint32_t depthOrLayer = 1,
-				Format format = Format::RGBA8,
-				Type type = Type::Texture2D,
-				AccessType access = AccessType::READ_WRITE);
+			  const OpenCL::Device& device,
+			  uint32_t width,
+			  uint32_t height,
+			  uint32_t depthOrLayer = 1,
+			  Format format = Format::RGBA8,
+			  Type type = Type::Texture2D,
+			  AccessType access = AccessType::READ_WRITE);
 	public:
 		cl_mem Get() const { return mpImage; }
 
@@ -65,9 +65,15 @@ namespace OpenCL
 
 		size_t GetPixelCount() const;
 		size_t GetChannelCount() const;
+		size_t GetDataSize() const;
 
-		TObjectPtr<UTexture2D> CreateUTexture2D();
-		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture);
+		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue);
+		TObjectPtr<UTexture2D> CreateUTexture2D(cl_command_queue queueOverride = nullptr);
+		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
+								const OpenCL::CommandQueue& queue);
+		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
+								cl_command_queue queueOverride = nullptr);
+		
 
 		TObjectPtr<UTexture2DArray> CreateUTexture2DArray();
 		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture);

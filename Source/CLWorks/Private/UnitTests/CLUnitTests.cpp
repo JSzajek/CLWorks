@@ -403,6 +403,29 @@ void FCLUnitTestsSpecs::Define()
 					return;
 			}
 		});
+
+		It("(3) Texture2D UE", [this]()
+		{
+			OpenCL::Context context(mDefaultDevice);
+
+			OpenCL::Image cltexture(context,
+									  mDefaultDevice,
+									  256, 
+									  256, 
+									  1,		
+									  OpenCL::Image::Format::RGBA8, 
+									  OpenCL::Image::Type::Texture2D);
+
+			if (!TestNotNull(TEXT("Failed Texture2D Creation!"), cltexture.Get()))
+				return;
+
+			// Create a texture in UE
+			TObjectPtr<UTexture2D> texture = cltexture.CreateUTexture2D();
+
+			TestNotNull(TEXT("Failed Texture2D Creation!"), texture.Get());
+
+			texture->ConditionalBeginDestroy();
+		});
 	});
 
 	Describe("Programs", [this]()

@@ -3,9 +3,9 @@
 using System.IO;
 using UnrealBuildTool;
 
-public class CLWorks : ModuleRules
+public class CLWorksEditor : ModuleRules
 {
-	public CLWorks(ReadOnlyTargetRules Target) : base(Target)
+	public CLWorksEditor(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -23,6 +23,7 @@ public class CLWorks : ModuleRules
 		{
 			"Core",
 			"OpenCL",
+			"CLWorks",
 		});	
 		
 		PrivateDependencyModuleNames.AddRange(new string[]
@@ -35,6 +36,16 @@ public class CLWorks : ModuleRules
 			"Slate",
 			"SlateCore",
 		});
+
+        if (Target.Type == TargetType.Editor)
+        {
+            PrivateDependencyModuleNames.AddRange(new string[]
+            {
+                "Blutility",
+                "UMGEditor",
+                "UnrealEd"
+            });
+        }
 
         DynamicallyLoadedModuleNames.AddRange(new string[]
 		{

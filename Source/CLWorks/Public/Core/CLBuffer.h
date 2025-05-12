@@ -7,7 +7,7 @@
 
 namespace OpenCL
 {
-	class Buffer
+	class CLWORKS_API Buffer
 	{
 	public:
 		Buffer(cl_context context,

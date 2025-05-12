@@ -11,13 +11,13 @@ namespace OpenCL
 		DirectX,
 	};
 
-	struct ContextProperties
+	struct CLWORKS_API ContextProperties
 	{
 	public:
 		Interop mInteropType = Interop::None;
 	};
 
-	class Context
+	class CLWORKS_API Context
 	{
 	public:
 		Context(const OpenCL::Device& device,

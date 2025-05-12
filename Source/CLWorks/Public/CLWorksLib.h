@@ -9,3 +9,5 @@
 #include "Core/CLKernel.h"
 #include "Core/CLProgram.h"
 #include "Core/CLCommandQueue.h"
+
+#include "Assets/CLProgramAsset.h"
