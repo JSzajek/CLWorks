@@ -4,6 +4,8 @@
 
 #include "Core/CLCommandQueue.h"
 
+#include "Utils/MipGenerator.h"
+
 #include "Engine/Texture2D.h"
 #include "Engine/Texture2DArray.h"
 #include "Engine/VolumeTexture.h"
@@ -12,15 +14,14 @@
 
 namespace OpenCL
 {
-
 	Image::Image(const OpenCL::Context& context, 
-					 const OpenCL::Device& device,
-					 uint32_t width,
-					 uint32_t height,
-					 uint32_t depthOrLayer,
-					 Format format,
-					 Type type,
-					 AccessType access)
+				 const OpenCL::Device& device,
+				 uint32_t width,
+				 uint32_t height,
+				 uint32_t depthOrLayer,
+				 Format format,
+				 Type type,
+				 AccessType access)
 		: mpContext(context.Get()),
 		mpDevice(device.Get()),
 		mpImage(nullptr),
@@ -40,16 +41,23 @@ namespace OpenCL
 		return mWidth * mHeight * mDepthOrLayer;
 	}
 
-	size_t Image::GetChannelCount() const
+	uint8_t Image::GetChannelCount() const
 	{
 		if ((mFormat & Format::R) > 0)
-		{
 			return 1;
-		}
 		else if ((mFormat & Format::RGBA) > 0)
-		{
 			return 4;
-		}
+		return 0;
+	}
+
+	size_t Image::GetChannelDataSize() const
+	{
+		if ((mFormat & Format::UChar) > 0)
+			return sizeof(uint8_t);
+		else if ((mFormat & Format::HalfFloat) > 0)
+			return sizeof(FFloat16);
+		else if ((mFormat & Format::Float) > 0)
+			return sizeof(float);
 		return 0;
 	}
 
@@ -64,12 +72,14 @@ namespace OpenCL
 		return 0;
 	}
 
-	TObjectPtr<UTexture2D> Image::CreateUTexture2D(const OpenCL::CommandQueue& queue)
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D(const OpenCL::CommandQueue& queue,
+												   bool genMips)
 	{
-		return CreateUTexture2D(queue.Get());
+		return CreateUTexture2D(queue.Get(), genMips);
 	}
 
-	TObjectPtr<UTexture2D> Image::CreateUTexture2D(cl_command_queue queueOverride)
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D(cl_command_queue queueOverride,
+												   bool genMips)
 	{
 		if (!mpImage)
 			return nullptr;
@@ -107,31 +117,72 @@ namespace OpenCL
 
 		const size_t dataSize = GetDataSize();
 
-		UTexture2D* texture = UTexture2D::CreateTransient(mWidth, mHeight, pixelFormat);
+		//UTexture2D* texture = UTexture2D::CreateTransient(mWidth, mHeight, pixelFormat);
 
-		FTexture2DMipMap& mip = texture->GetPlatformData()->Mips[0];
-		mip.BulkData.Lock(LOCK_READ_WRITE);
-		void* DestImageData = mip.BulkData.Realloc(dataSize);
-		FMemory::Memcpy(DestImageData, pixelData, dataSize);
-		mip.BulkData.Unlock();
+		UTexture2D* texture = NewObject<UTexture2D>(GetTransientPackage(),
+												    NAME_None,
+												    RF_Transient);
+
+		texture->SetPlatformData(new FTexturePlatformData());
+		texture->GetPlatformData()->SizeX = mWidth;
+		texture->GetPlatformData()->SizeY = mHeight;
+		texture->GetPlatformData()->SetNumSlices(1);
+		texture->GetPlatformData()->PixelFormat = pixelFormat;
+		
+		const size_t channelDataSize = GetChannelDataSize();
+		const uint8_t channelCount = GetChannelCount();
+
+		std::vector<Mip> mips;
+		if (genMips)
+		{
+			GenerateMips(mips, pixelData);
+		}
+		else
+		{
+			mips.emplace_back(Mip{ mWidth, mHeight, channelCount, pixelData });
+		}
+
+		texture->GetPlatformData()->Mips.Reset(mips.size());
+
+		// Upload Mips
+		for (uint32_t i = 0; i < mips.size(); ++i)
+		{
+			Mip& dataMip = mips[i];
+			const uint32_t mipDataSize = dataMip.mWidth * dataMip.mHeight * channelCount * channelDataSize;
+
+			FTexture2DMipMap* mip = new FTexture2DMipMap();
+			texture->GetPlatformData()->Mips.Add(mip);
+
+			mip->SizeX = dataMip.mWidth;
+			mip->SizeY = dataMip.mHeight;
+			mip->SizeZ = 1;
+
+			mip->BulkData.Lock(LOCK_READ_WRITE);
+			void* DestImageData = mip->BulkData.Realloc(mipDataSize);
+			FMemory::Memcpy(DestImageData, pixelData, mipDataSize);
+			mip->BulkData.Unlock();
+
+			// Clean up memory
+			delete[] dataMip.mPixels;
+			dataMip.mPixels = nullptr;
+		}
 
 		// Trigger render resource update
 		texture->UpdateResource();
 		
-		// Clean up memory
-		delete[] pixelData;
-
 		return texture;
 	}
 
 	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> texture, 
-								   const OpenCL::CommandQueue& queue)
+								   const OpenCL::CommandQueue& queue,
+								   bool genMips)
 	{
-		return UploadToUTexture2D(texture, queue.Get());
+		return UploadToUTexture2D(texture, queue.Get(), genMips);
 	}
 
 	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> output,
-								   cl_command_queue queueOverride)
+								   cl_command_queue queueOverride,
+								   bool genMips)
 	{
 		const size_t output_width = output->GetSizeX();
 		const size_t output_height = output->GetSizeY();
@@ -153,17 +204,58 @@ namespace OpenCL
 		if (!ReadFromCL(&pixelData, queueOverride))
 			return false;
 
-		FTexture2DMipMap& mip = output->GetPlatformData()->Mips[0];
-		mip.BulkData.Lock(LOCK_READ_WRITE);
-		void* DestImageData = mip.BulkData.Realloc(internal_dataSize);
-		FMemory::Memcpy(DestImageData, pixelData, internal_dataSize);
-		mip.BulkData.Unlock();
+
+		const size_t channelDataSize = GetChannelDataSize();
+		const uint8_t channelCount = GetChannelCount();
+
+		std::vector<Mip> mips;
+		if (genMips)
+		{
+			GenerateMips(mips, pixelData);
+		}
+		else
+		{
+			mips.emplace_back(Mip{ mWidth, mHeight, channelCount, pixelData });
+		}
+
+		FTexturePlatformData* platformData = output->GetPlatformData();
+		if (mips.size() != platformData->Mips.Num())
+		{
+			// Resize Mips to Match
+			if (platformData->Mips.Num() < mips.size())
+			{
+				for (uint32_t i = platformData->Mips.Num(); i < mips.size(); ++i)
+					platformData->Mips.Add(new FTexture2DMipMap()); 
+			}
+			else
+			{
+				platformData->Mips.Reset(mips.size());
+			}
+		}
+
+		for (uint32_t i = 0; i < mips.size(); ++i)
+		{
+			Mip& dataMip = mips[i];
+			const uint32_t mipDataSize = dataMip.mWidth * dataMip.mHeight * channelCount * channelDataSize;
+
+			FTexture2DMipMap* mip = &output->GetPlatformData()->Mips[i];
+
+			mip->SizeX = dataMip.mWidth;
+			mip->SizeY = dataMip.mHeight;
+			mip->SizeZ = 1;
+
+			mip->BulkData.Lock(LOCK_READ_WRITE);
+			void* DestImageData = mip->BulkData.Realloc(mipDataSize);
+			FMemory::Memcpy(DestImageData, pixelData, mipDataSize);
+			mip->BulkData.Unlock();
+
+			// Clean up memory
+			delete[] dataMip.mPixels;
+			dataMip.mPixels = nullptr;
+		}
 
 		// Trigger render resource update
 		output->UpdateResource();
-
-		// Clean up memory
-		delete[] pixelData;
 
 		return true;
 	}
@@ -357,6 +449,22 @@ namespace OpenCL
 			UE_LOG(LogCLWorks, Error, TEXT("Failed Reading Image: %d"), err);
 			return false;
 		}
+		return true;
+	}
+
+	bool Image::GenerateMips(std::vector<Mip>& output, 
+							 void* src)
+	{
+		const uint8_t channelCount = GetChannelCount();
+
+		if ((mFormat & Format::UChar) > 0)
+			MipGenerator::GenerateMipsInt8(output, (uint8_t*)src, mWidth, mHeight, channelCount);
+		else if ((mFormat & Format::HalfFloat) > 0)
+			MipGenerator::GenerateMipsFloat16(output, (FFloat16*)src, mWidth, mHeight, channelCount);
+		else if ((mFormat & Format::Float) > 0)
+			MipGenerator::GenerateMipsFloat(output, (float*)src, mWidth, mHeight, channelCount);
+		else
+			return false;
 		return true;
 	}
 

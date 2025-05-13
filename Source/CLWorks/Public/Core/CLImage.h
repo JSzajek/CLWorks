@@ -3,6 +3,8 @@
 #include "Core/CLCore.h"
 #include "Core/CLContext.h"
 
+#include "Core/ImageDefines.h"
+
 class UTexture2D;
 class UTexture2DArray;
 class UVolumeTexture;
@@ -64,15 +66,20 @@ namespace OpenCL
 		uint32_t GetHeight() const { return mHeight; }
 
 		size_t GetPixelCount() const;
-		size_t GetChannelCount() const;
+		uint8_t GetChannelCount() const;
+		size_t GetChannelDataSize() const;
 		size_t GetDataSize() const;
 
-		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue);
-		TObjectPtr<UTexture2D> CreateUTexture2D(cl_command_queue queueOverride = nullptr);
+		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue,
+												bool genMips = false);
+		TObjectPtr<UTexture2D> CreateUTexture2D(cl_command_queue queueOverride = nullptr,
+												bool genMips = false);
 		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
-								const OpenCL::CommandQueue& queue);
+								const OpenCL::CommandQueue& queue,
+								bool genMips = false);
 		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
-								cl_command_queue queueOverride = nullptr);
+								cl_command_queue queueOverride = nullptr,
+								bool genMips = false);
 		
 
 		TObjectPtr<UTexture2DArray> CreateUTexture2DArray();
@@ -87,6 +94,9 @@ namespace OpenCL
 						cl_command_queue overrideQueue = nullptr,
 						bool isBlocking = true) const;
 
+		bool GenerateMips(std::vector<Mip>& output,
+						  void* src);
+
 		bool WriteToUTexture(TObjectPtr<UTexture> texture);
 	private:
 		cl_context mpContext = nullptr;
@@ -96,6 +106,7 @@ namespace OpenCL
 		Format mFormat = Format::Undefined;
 		Type mType = Type::Undefined;
 		AccessType mAccess = AccessType::READ_WRITE;
+
 		uint32_t mWidth = 0;
 		uint32_t mHeight = 0;
 		uint32_t mDepthOrLayer = 0;
