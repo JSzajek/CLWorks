@@ -148,7 +148,7 @@ void SShaderEditorWidget::InsertTabOrUnindent(bool shiftMod)
 	const int32 cursorColumn = cursorLocation.GetOffset();
 
 	TArray<FString> lines;
-	textString.ParseIntoArrayLines(lines);
+	textString.ParseIntoArrayLines(lines, false);
 
 	// No valid line?
 	if (!lines.IsValidIndex(cursorLine))
