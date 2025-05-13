@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 
 #include "Toolkits/AssetEditorToolkit.h"
-#include "Widgets/Input/SMultiLineEditableTextBox.h"
+#include "Widgets/SShaderEditorWidget.h"
 
 class UCLProgramAsset;
 
@@ -37,13 +37,8 @@ public:
 	}
 private:
 	TSharedRef<SDockTab> SpawnEditorTab(const FSpawnTabArgs& Args);
-
-	void OnSourceChanged(const FText& NewText, ETextCommit::Type CommitType);
-	FReply OnCompileClicked();
 private:
-	TSharedPtr<SMultiLineEditableTextBox> mpSourceEditor;
-	TSharedPtr<STextBlock> mpCompileStatusText;
-	TSharedPtr<SMultiLineEditableText> mpErrorLogOutput;
+	TSharedPtr<SShaderEditorWidget> mpShaderEditor;
 
 	TObjectPtr<UCLProgramAsset> mpProgramAsset;
 };

@@ -1,6 +1,6 @@
 #include "Assets/CLProgramAssetActions.h"
 
-#include "Assets/CLProgramAssetEditorToolkit.h"
+#include "Editor/CLProgramAssetEditorToolkit.h"
 
 void FCLProgramAssetActions::OpenAssetEditor(const TArray<UObject*>& InObjects, 
 											 TSharedPtr<IToolkitHost> ToolkitHost)

@@ -32,20 +32,34 @@ namespace OpenCL
 		}
 	}
 
-	void Program::ReadFromFile(const std::filesystem::path& file)
+	bool Program::ReadFromFile(const std::filesystem::path& file,
+							   std::string* errMsg)
 	{
+		mpProgram = nullptr;
+
 		std::unordered_set<std::string> includedFiles;
-		const std::string program_string = ReadProgram(file, includedFiles);
+		const std::string program_string = ReadProgram(file, includedFiles, errMsg);
 
-		SetupProgramFromString(program_string);
+		if (program_string.empty())
+		{
+			if (errMsg)
+				*errMsg = "Program File is Empty or Could Not be Read.";
+			return false;
+		}
+
+		return SetupProgramFromString(program_string, errMsg);
 	}
 
-	void Program::ReadFromString(const std::string& program)
+	bool Program::ReadFromString(const std::string& program,
+								 std::string* errMsg)
 	{
-		SetupProgramFromString(program);
+		mpProgram = nullptr;
+
+		return SetupProgramFromString(program, errMsg);
 	}
 
-	void Program::SetupProgramFromString(const std::string& programString)
+	bool Program::SetupProgramFromString(const std::string& programString,
+										 std::string* errMsg)
 	{
 		cl_program program;
 		char* program_buffer, * program_log;
@@ -66,8 +80,11 @@ namespace OpenCL
 
 		if (err < 0)
 		{
-			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Create the Program!"));
-			return;
+			if (errMsg)
+				*errMsg = "Couldn't Create the Program!";
+			else
+				UE_LOG(LogCLWorks, Error, TEXT("Couldn't Create the Program!"));
+			return false;
 		}
 		free(program_buffer);
 
@@ -92,20 +109,33 @@ namespace OpenCL
 								  program_log, 
 								  NULL);
 
-			UE_LOG(LogCLWorks, Error, TEXT("Program Error: %s"), *FString(program_log));
+			if (errMsg)
+			{
+				*errMsg = "Program Error: " + std::string(program_log);
+			}
+			else
+			{
+				UE_LOG(LogCLWorks, Error, TEXT("Program Error: %s"), *FString(program_log));
+			}
+
 			free(program_log);
-			return;
+			return false;
 		}
 
 		mpProgram = program;
+		return true;
 	}
 
 	std::string Program::ReadProgram(const std::filesystem::path& file,
-									 std::unordered_set<std::string>& includedFiles)
+									 std::unordered_set<std::string>& includedFiles,
+									 std::string* errMsg)
 	{
 		if (!std::filesystem::exists(file))
 		{
-			UE_LOG(LogCLWorks, Error, TEXT("File Couldn't Be Found At: %s"), *FString(file.c_str()));
+			if (errMsg)
+				*errMsg = "File Couldn't Be Found At: " + file.string();
+			else
+				UE_LOG(LogCLWorks, Error, TEXT("File Couldn't Be Found At: %s"), *FString(file.c_str()));
 			return "";
 		}
 
@@ -115,7 +145,10 @@ namespace OpenCL
 
 		if (!program_file.is_open()) 
 		{
-			UE_LOG(LogCLWorks, Error, TEXT("Could Not Open File: %s"), *FString(file.c_str()));
+			if (errMsg)
+				*errMsg = "Could Not Open File: " + file.string();
+			else
+				UE_LOG(LogCLWorks, Error, TEXT("Could Not Open File: %s"), *FString(file.c_str()));
 			return "";
 		}
 
@@ -135,7 +168,7 @@ namespace OpenCL
 					{
 						includedFiles.insert(includeFile);
 						std::filesystem::path includeFilePath = file.parent_path() / includeFile;
-						std::string includeFileContent = ReadProgram(includeFilePath, includedFiles);
+						std::string includeFileContent = ReadProgram(includeFilePath, includedFiles, errMsg);
 						program_string.replace(program_string.find(line), line.size(), includeFileContent);
 					}
 				}

@@ -18,7 +18,10 @@ UObject* UCLProgramAssetFactory::FactoryCreateNew(UClass* Class,
 {
 	UCLProgramAsset* NewAsset = NewObject<UCLProgramAsset>(InParent, Class, Name, Flags);
 	if (NewAsset)
+	{
 		NewAsset->ProgramName = Name.ToString();
+		NewAsset->SourceCode = "__kernel void example()\n{\n}";
+	}
 
 	return NewAsset;
 }

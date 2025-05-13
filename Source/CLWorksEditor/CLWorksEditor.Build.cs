@@ -35,7 +35,8 @@ public class CLWorksEditor : ModuleRules
 			"Projects",
 			"Slate",
 			"SlateCore",
-		});
+            "InputCore"
+        });
 
         if (Target.Type == TargetType.Editor)
         {

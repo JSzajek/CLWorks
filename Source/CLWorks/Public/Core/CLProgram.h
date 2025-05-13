@@ -20,15 +20,19 @@ namespace OpenCL
 
 		~Program();
 	public:
-		void ReadFromFile(const std::filesystem::path& file);
-		void ReadFromString(const std::string& program);
+		bool ReadFromFile(const std::filesystem::path& file, 
+						  std::string* errMsg = nullptr);
+		bool ReadFromString(const std::string& program, 
+							std::string* errMsg = nullptr);
 
 		cl_program Get() const { return mpProgram; };
 	private:
-		void SetupProgramFromString(const std::string& programString);
+		bool SetupProgramFromString(const std::string& programString,
+									std::string* errMsg);
 
 		std::string ReadProgram(const std::filesystem::path& file,
-                                std::unordered_set<std::string>& includedFiles);
+                                std::unordered_set<std::string>& includedFiles,
+								std::string* errMsg);
 	private:
 		cl_device_id mDeviceId;
 		cl_context mContext;

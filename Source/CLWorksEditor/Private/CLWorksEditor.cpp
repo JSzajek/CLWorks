@@ -5,7 +5,7 @@
 #include "AssetToolsModule.h"
 
 #include "Assets/CLProgramAssetActions.h"
-#include "Assets/CLProgramAssetEditorToolkit.h"
+#include "Editor/CLProgramAssetEditorToolkit.h"
 
 #define LOCTEXT_NAMESPACE "FCLWorksEditorModule"
 
