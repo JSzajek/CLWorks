@@ -12,11 +12,13 @@ namespace OpenCL
 	class CLWORKS_API Program
 	{
 	public:
-		Program(const OpenCL::Device& device,
-				const OpenCL::Context& context);
+		Program();
 
-		Program(cl_device_id device, 
-				cl_context contex);
+		Program(const OpenCL::Context& context,
+				const OpenCL::Device& device);
+
+		Program(cl_context context,
+				cl_device_id device);
 
 		~Program();
 	public:
@@ -34,8 +36,8 @@ namespace OpenCL
                                 std::unordered_set<std::string>& includedFiles,
 								std::string* errMsg);
 	private:
-		cl_device_id mDeviceId;
-		cl_context mContext;
+		cl_context mpContext;
+		cl_device_id mpDeviceId;
 		cl_program mpProgram;
 	};
 }

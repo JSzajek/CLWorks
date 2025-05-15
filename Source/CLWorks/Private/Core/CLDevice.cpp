@@ -4,36 +4,68 @@
 
 namespace OpenCL
 {
-	Device::Device()
+	Device::Device(uint32_t deviceIndex,
+				   uint32_t platformIndex)
 	{
-		cl_platform_id platform;
-		cl_device_id dev;
-		int err;
+		cl_platform_id platform = nullptr;
+		cl_device_id dev = nullptr;
+		int32_t err = 0;
 
-		/* Identify a platform */
-		err = clGetPlatformIDs(1, &platform, NULL);
+		// Identify the platforms -----------------------------------------------------------------
+		cl_uint numPlatforms = 0;
+		clGetPlatformIDs(0, nullptr, &numPlatforms);
+		if (numPlatforms == 0) 
+			return;
+
+		if (numPlatforms < platformIndex)
+		{
+			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Find Platform with Index: %d"), platformIndex);
+			return;
+		}
+
+		std::vector<cl_platform_id> platforms(numPlatforms, nullptr);
+		err = clGetPlatformIDs(numPlatforms, platforms.data(), NULL);
 		if (err < 0)
 		{
 			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Identify a Platform!"));
 			return;
 		}
 
+		platform = platforms[platformIndex];
+		// ----------------------------------------------------------------------------------------
+
+
 		// Access A Device ------------------------------------------------------------------------
-		// GPU
-		err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 1, &dev, NULL);
-		if (err == CL_DEVICE_NOT_FOUND)
+		cl_uint numDevices = 0;
+		clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, 0, NULL, &numDevices);
+		if (numDevices == 0)
 		{
-			// CPU
+			UE_LOG(LogCLWorks, Warning, TEXT("Couldn't Find a GPU and Falling Back to CPU."));
+
 			err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_CPU, 1, &dev, NULL);
+			if (err < 0)
+			{
+				UE_LOG(LogCLWorks, Error, TEXT("Couldn't Access Any Devices!"));
+				return;
+			}
 		}
-		if (err < 0)
+
+		if (numDevices < deviceIndex)
 		{
-			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Access Any Devices!"));
+			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Find Device with Index: %d"), deviceIndex);
 			return;
 		}
+
+		std::vector<cl_device_id> devices(numDevices, nullptr);
+		err = clGetDeviceIDs(platform, CL_DEVICE_TYPE_GPU, numDevices, devices.data(), NULL);
+		if (err < 0)
+		{
+			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Retrieve Devices!"));
+			return;
+		}
+
+		mpDevice = devices[deviceIndex];
 		// ----------------------------------------------------------------------------------------
-		
-		mpDevice = dev;
 	}
 
 	Device::~Device()

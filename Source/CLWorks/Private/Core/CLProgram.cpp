@@ -7,18 +7,25 @@
 
 namespace OpenCL
 {
-	Program::Program(const Device& device, 
-					 const Context& context)
-		: mDeviceId(device.Get()),
-		mContext(context.Get()),
+	Program::Program()
+		: mpContext(nullptr),
+		mpDeviceId(nullptr),
 		mpProgram(nullptr)
 	{
 	}
 
-	Program::Program(cl_device_id device,
-					 cl_context context)
-		: mDeviceId(device),
-		mContext(context),
+	Program::Program(const Context& context,
+					 const Device& device)
+		: mpContext(context.Get()),
+		mpDeviceId(device.Get()),
+		mpProgram(nullptr)
+	{
+	}
+
+	Program::Program(cl_context context,
+					 cl_device_id device)
+		: mpContext(context),
+		mpDeviceId(device),
 		mpProgram(nullptr)
 	{
 	}
@@ -72,7 +79,7 @@ namespace OpenCL
 		program_buffer[program_size] = '\0';
 		std::memcpy(program_buffer, programString.c_str(), program_size);
 
-		program = clCreateProgramWithSource(mContext, 
+		program = clCreateProgramWithSource(mpContext, 
 											1,
 											(const char**)&program_buffer, 
 											&program_size,
@@ -93,7 +100,7 @@ namespace OpenCL
 		{
 			/* Find size of log and print to std output */
 			clGetProgramBuildInfo(program, 
-								  mDeviceId, 
+								  mpDeviceId, 
 								  CL_PROGRAM_BUILD_LOG,
 								  0, 
 								  NULL, 
@@ -103,7 +110,7 @@ namespace OpenCL
 			program_log[log_size] = '\0';
 
 			clGetProgramBuildInfo(program, 
-								  mDeviceId, 
+								  mpDeviceId, 
 								  CL_PROGRAM_BUILD_LOG,
 								  log_size + 1, 
 								  program_log, 

@@ -83,7 +83,7 @@ FReply SShaderEditorWidget::OnCompileClicked()
 	}
 	else
 	{
-		OpenCL::Program program(*mpProgramData->mpDevice, *mpProgramData->mpContext);
+		OpenCL::Program program(*mpProgramData->mpContext, *mpProgramData->mpDevice);
 
 		std::string sourceCode = TCHAR_TO_UTF8(*mpProgramAsset->SourceCode);
 

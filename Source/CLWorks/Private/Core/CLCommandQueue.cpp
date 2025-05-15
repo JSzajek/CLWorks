@@ -4,6 +4,13 @@
 
 namespace OpenCL
 {
+	CommandQueue::CommandQueue()
+		: mpCommandQueue(nullptr),
+		mIsValid(false)
+	{
+
+	}
+
 	CommandQueue::CommandQueue(const Context& context, 
 							   const Device& device)
 		: mIsValid(true)
@@ -17,6 +24,8 @@ namespace OpenCL
 	{
 		Initialize(context, device);
 	}
+
+	
 
 	CommandQueue::~CommandQueue()
 	{

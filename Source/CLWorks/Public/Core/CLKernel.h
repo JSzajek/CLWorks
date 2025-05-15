@@ -9,6 +9,8 @@ namespace OpenCL
 	class CLWORKS_API Kernel
 	{
 	public:
+		Kernel();
+
 		Kernel(const OpenCL::Program& program, 
 			   const std::string& kernalName);
 
@@ -22,13 +24,13 @@ namespace OpenCL
 		bool IsValid() const { return mIsValid; }
 
 		template<typename T>
-		void SetArgument(cl_uint arg_index,
+		bool SetArgument(cl_uint arg_index,
 						 const T& arg_value)
 		{
-			SetArgument(arg_index, sizeof(T), &arg_value);
+			return SetArgument(arg_index, sizeof(T), &arg_value);
 		}
 
-		void SetArgument(cl_uint arg_index,
+		bool SetArgument(cl_uint arg_index,
 						 size_t arg_size,
 						 const void* arg_value);
 	private:

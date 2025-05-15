@@ -51,8 +51,19 @@ namespace OpenCL
 			COUNT
 		};
 	public:
+		Image();
+
 		Image(const OpenCL::Context& context,
 			  const OpenCL::Device& device,
+			  uint32_t width,
+			  uint32_t height,
+			  uint32_t depthOrLayer = 1,
+			  Format format = Format::RGBA8,
+			  Type type = Type::Texture2D,
+			  AccessType access = AccessType::READ_WRITE);
+
+		Image(cl_context context,
+			  cl_device_id device,
 			  uint32_t width,
 			  uint32_t height,
 			  uint32_t depthOrLayer = 1,
@@ -97,7 +108,13 @@ namespace OpenCL
 		bool GenerateMips(std::vector<Mip>& output,
 						  void* src);
 
-		bool WriteToUTexture(TObjectPtr<UTexture> texture);
+		void WriteToUTexture2D(TObjectPtr<UTexture2D> texture, 
+							   void* src,
+							   bool genMips);
+
+		void WriteToUTexture2D_Async(TObjectPtr<UTexture2D> texture, 
+									 void* src,
+									 bool genMips);
 	private:
 		cl_context mpContext = nullptr;
 		cl_device_id mpDevice = nullptr;

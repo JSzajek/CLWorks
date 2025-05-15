@@ -4,6 +4,12 @@
 
 namespace OpenCL
 {
+	Kernel::Kernel()
+		: mpKernel(nullptr),
+		mIsValid(false)
+	{
+	}
+
 	Kernel::Kernel(const Program& program, 
 				   const std::string& kernalName)
 		: mIsValid(true)
@@ -27,17 +33,19 @@ namespace OpenCL
 		}
 	}
 
-	void Kernel::SetArgument(cl_uint arg_index, size_t arg_size, const void* arg_value)
+	bool Kernel::SetArgument(cl_uint arg_index, size_t arg_size, const void* arg_value)
 	{
 		if (!mIsValid)
-			return;
+			return false;
 
 		cl_int err = clSetKernelArg(mpKernel, arg_index, arg_size, arg_value);
 		if (err < 0)
 		{
 			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Create Kernel Argument!: %d"), err);
 			mIsValid = false;
+			return false;
 		}
+		return true;
 	}
 
 	void Kernel::Initialize(cl_program program,

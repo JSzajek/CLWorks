@@ -7,6 +7,11 @@
 
 namespace OpenCL
 {
+	Context::Context()
+		: mpContext(nullptr)
+	{
+	}
+
 	Context::Context(const Device& device, 
 					 const ContextProperties& properties)
 	{
@@ -72,35 +77,16 @@ namespace OpenCL
 	void Context::Initialize(cl_device_id device, 
 							 const ContextProperties& properties)
 	{
+		if (device == nullptr)
+			return;
+
 		cl_int err = 0;
 
 		cl_platform_id platform;
-
 		clGetPlatformIDs(1, &platform, NULL);
 
+		// TODO:: Implement Interop
 		std::vector<cl_context_properties> props;
-
-		/*
-		auto currentContext = wglGetCurrentContext();
-		auto currentDevice = wglGetCurrentDC();
-
-		printf("OpenGL Context: %p\n", currentContext);
-		printf("OpenGL Device: %p\n", currentDevice);
-
-		wglMakeCurrent(currentDevice, currentContext);
-
-		if (properties.mInteropType == Interop::OpenGL)
-		{
-			props.emplace_back(CL_GL_CONTEXT_KHR);
-			props.emplace_back((cl_context_properties)currentContext);
-			props.emplace_back(CL_WGL_HDC_KHR);
-			props.emplace_back((cl_context_properties)currentDevice);
-			props.emplace_back(CL_CONTEXT_PLATFORM);
-			props.emplace_back((cl_context_properties)platform);
-
-			props.emplace_back(0); // signals end of property list
-		}
-		*/
 
 		mpContext = clCreateContext(props.data(), 1, &device, NULL, NULL, &err);
 		if (err < 0)

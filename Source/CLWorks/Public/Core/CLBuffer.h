@@ -10,6 +10,8 @@ namespace OpenCL
 	class CLWORKS_API Buffer
 	{
 	public:
+		Buffer();
+
 		Buffer(cl_context context,
 			   void* dataPtr,
 			   size_t dataSize,

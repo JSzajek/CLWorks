@@ -61,7 +61,7 @@ void FCLUnitTestsSpecs::Define()
 			OpenCL::Context context(mDefaultDevice);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void test() { }");
 
 			TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr);
@@ -72,7 +72,7 @@ void FCLUnitTestsSpecs::Define()
 			OpenCL::Context context(mDefaultDevice);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromFile(moduleDirStr + "/UnitTest/Shaders/add_vectors.cl");
 
 			TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr);
@@ -82,7 +82,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void test() { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -99,7 +99,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void test(float a, float b) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -124,7 +124,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void test(float a) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -194,7 +194,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void double_data(__global float* data)\n" 
 								   "{ int i = get_global_id(0); \n"
 								   "data[i] = data[i] * 2; }");
@@ -240,7 +240,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void test(__global float* data) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -268,7 +268,7 @@ void FCLUnitTestsSpecs::Define()
 		{
 			OpenCL::Context context(mDefaultDevice);
 
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 			program.ReadFromString("__kernel void triple_data(__global const float* data, __global float* result)\n" 
 								   "{ int i = get_global_id(0); \n"
 								   "result[i] = data[i] * 3; }");
@@ -350,12 +350,12 @@ void FCLUnitTestsSpecs::Define()
 			OpenCL::Context context(mDefaultDevice);
 
 			OpenCL::Image cltexture(context,
-									  mDefaultDevice,
-									  256, 
-									  256, 
-									  1,		
-									  OpenCL::Image::Format::RGBA8, 
-									  OpenCL::Image::Type::Texture2D);
+								    mDefaultDevice,
+								    256, 
+								    256, 
+								    1,		
+								    OpenCL::Image::Format::RGBA8, 
+								    OpenCL::Image::Type::Texture2D);
 
 			TestNotNull(TEXT("Failed Texture2D Creation!"), cltexture.Get());
 		});
@@ -363,7 +363,7 @@ void FCLUnitTestsSpecs::Define()
 		It("(2) Texture2D Read Write", [this]()
 		{
 			OpenCL::Context context(mDefaultDevice);
-			OpenCL::Program program(mDefaultDevice, context);
+			OpenCL::Program program(context, mDefaultDevice);
 
 			OpenCL::Image cltexture(context,
 									  mDefaultDevice,
@@ -438,7 +438,7 @@ void FCLUnitTestsSpecs::Define()
 			OpenCL::Context context(device, contextProperties);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(device, context);
+			OpenCL::Program program(context, device);
 			program.ReadFromFile(moduleDirStr + "/UnitTest/Shaders/add_vectors.cl");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))

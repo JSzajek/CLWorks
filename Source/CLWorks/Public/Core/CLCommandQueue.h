@@ -13,6 +13,8 @@ namespace OpenCL
 	class CLWORKS_API CommandQueue
 	{
 	public:
+		CommandQueue();
+
 		CommandQueue(const OpenCL::Context& context, 
 					 const OpenCL::Device& device);
 

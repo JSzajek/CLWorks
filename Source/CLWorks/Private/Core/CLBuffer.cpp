@@ -4,10 +4,16 @@
 
 namespace OpenCL
 {
+	Buffer::Buffer()
+		: mpBuffer(nullptr)
+	{
+	}
+
 	Buffer::Buffer(cl_context context, 
 				   void* dataPtr, 
 				   size_t dataSize, 
 				   AccessType type)
+		: mpBuffer(nullptr)
 	{
 		Initialize(context, dataPtr, dataSize, type);
 	}
@@ -16,6 +22,7 @@ namespace OpenCL
 				   void* dataPtr, 
 				   size_t dataSize, 
 				   AccessType type)
+		: mpBuffer(nullptr)
 	{
 		Initialize(context.Get(), dataPtr, dataSize, type);
 	}
@@ -48,7 +55,6 @@ namespace OpenCL
 			default:
 			{
 				UE_LOG(LogCLWorks, Error, TEXT("Invalide Buffer Type: %d"), type);
-				mpBuffer = nullptr;
 				break;
 			}
 		}

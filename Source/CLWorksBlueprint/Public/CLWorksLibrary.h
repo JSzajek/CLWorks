@@ -1,0 +1,89 @@
+#pragma once
+
+#include "Modules/ModuleManager.h"
+
+#include "UObject/ObjectMacros.h"
+#include "UObject/Object.h"
+#include "Kismet/BlueprintFunctionLibrary.h"
+#include "Misc/CoreDelegates.h"
+
+#include "Objects/CLObjectDefines.h"
+
+#include "CLWorksLibrary.generated.h"
+
+DECLARE_LOG_CATEGORY_EXTERN(LogCLWorksBlueprint, Log, All);
+
+class FCLWorksBlueprintModule final : public IModuleInterface
+{
+public:
+	/** IModuleInterface implementation */
+	virtual void StartupModule() override;
+	virtual void ShutdownModule() override;
+private:
+};
+
+
+// Forward Declaration --------------------------
+class UCLBufferObject;
+class UCLContextObject;
+class UCLCommandQueueObject;
+class UCLImageObject;
+class UCLProgramObject;
+class UCLProgramAsset;
+// ----------------------------------------------
+
+UCLASS(MinimalAPI)
+class  UCLWorksLibrary : public UBlueprintFunctionLibrary
+{
+	GENERATED_BODY()
+public:
+	static void InitializeLibray();
+	static void DeinitializeLibray();
+public:
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLContextObject* CreateCustomContext(int32 deviceIndex);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLCommandQueueObject* CreateCommandQueue(UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLProgramObject* CreateProgram(UCLProgramAsset* program, 
+										   const FString& kernelName,
+										   UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLBufferObject* CreateIntBuffer(const TArray<int32>& buffer,
+											UCLAccessType access = UCLAccessType::READ_WRITE,
+											UCLContextObject* contextOverride = nullptr);
+	
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLBufferObject* CreateFloatBuffer(const TArray<float>& buffer,
+											  UCLAccessType access = UCLAccessType::READ_WRITE,
+											  UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static TArray<int32> ReadIntBuffer(UCLBufferObject* buffer,
+									   int32 numElements,
+									   UCLCommandQueueObject* queue,
+									   UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static TArray<float> ReadFloatBuffer(UCLBufferObject* buffer,
+										 int32 numElements,
+										 UCLCommandQueueObject* queue,
+										 UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UCLImageObject* CreateImage(int32 width, 
+									   int32 height,
+									   UCLImageType type = UCLImageType::Texture2D,
+									   UCLImageFormat format = UCLImageFormat::RGBA8,
+									   UCLAccessType access = UCLAccessType::READ_WRITE,
+									   UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static bool RunProgram(UCLProgramObject* program,
+						   UCLCommandQueueObject* queue,
+						   int64 dimensions,
+						   const TArray<int64>& workCount);
+};

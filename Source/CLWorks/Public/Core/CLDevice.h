@@ -9,7 +9,8 @@ namespace OpenCL
 	class CLWORKS_API Device
 	{
 	public:
-		Device();
+		Device(uint32_t deviceIndex = 0, 
+			   uint32_t platformIndex = 0);
 		~Device();
 	public:
 		bool AreImagesSupported() const;

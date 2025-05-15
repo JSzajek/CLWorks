@@ -20,6 +20,8 @@ namespace OpenCL
 	class CLWORKS_API Context
 	{
 	public:
+		Context();
+
 		Context(const OpenCL::Device& device,
 				const ContextProperties& properties = {});
 
