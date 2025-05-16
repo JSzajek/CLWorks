@@ -145,8 +145,6 @@ namespace OpenCL
 
 		const size_t dataSize = GetDataSize();
 
-		//UTexture2D* texture = UTexture2D::CreateTransient(mWidth, mHeight, pixelFormat);
-
 		UTexture2D* texture = NewObject<UTexture2D>(GetTransientPackage(),
 												    NAME_None,
 												    RF_Transient);
@@ -157,7 +155,8 @@ namespace OpenCL
 		texture->GetPlatformData()->SetNumSlices(1);
 		texture->GetPlatformData()->PixelFormat = pixelFormat;
 		
-		WriteToUTexture2D(texture, pixelData, genMips);
+		//WriteToUTexture2D(texture, pixelData, genMips);
+		WriteToUTexture2D_Async(texture, pixelData, genMips, 64 * 2048);
 
 		// Trigger render resource update
 		//output->UpdateResource();
@@ -196,7 +195,8 @@ namespace OpenCL
 		if (!ReadFromCL(&pixelData, queueOverride))
 			return false;
 
-		WriteToUTexture2D(output, pixelData, genMips);
+		//WriteToUTexture2D(output, pixelData, genMips);
+		WriteToUTexture2D_Async(output, pixelData, genMips, 64 * 2048);
 
 		// Trigger render resource update
 		//output->UpdateResource();
@@ -416,6 +416,8 @@ namespace OpenCL
 								  void* src, 
 								  bool genMips)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2D());
+
 		const size_t channelDataSize = GetChannelDataSize();
 		const uint8_t channelCount = GetChannelCount();
 
@@ -457,7 +459,7 @@ namespace OpenCL
 
 			mip->BulkData.Lock(LOCK_READ_WRITE);
 			void* DestImageData = mip->BulkData.Realloc(mipDataSize);
-			FMemory::Memcpy(DestImageData, src, mipDataSize);
+			FMemory::Memcpy(DestImageData, dataMip.mPixels, mipDataSize);
 			mip->BulkData.Unlock();
 
 			// Clean up memory
@@ -469,9 +471,99 @@ namespace OpenCL
 	}
 
 	void Image::WriteToUTexture2D_Async(TObjectPtr<UTexture2D> texture, 
-										void* src, 
-										bool genMips)
+										void* src,
+										bool genMips,
+										uint32_t maxBytesPerUpload)
 	{
+		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2D_Async());
 
+		const size_t channelDataSize = GetChannelDataSize();
+		const uint8_t channelCount = GetChannelCount();
+
+		std::vector<Mip> mips;
+		if (genMips)
+		{
+			GenerateMips(mips, src);
+		}
+		else
+		{
+			mips.emplace_back(Mip{ mWidth, mHeight, channelCount, src });
+		}
+
+		FTexturePlatformData* platformData = texture->GetPlatformData();
+		if (mips.size() != platformData->Mips.Num())
+		{
+			// Resize Mips to Match
+			if (platformData->Mips.Num() < mips.size())
+			{
+				for (uint32_t i = platformData->Mips.Num(); i < mips.size(); ++i)
+				{
+					platformData->Mips.Add(new FTexture2DMipMap());
+					FTexture2DMipMap* mip = &platformData->Mips[i];
+
+					Mip& dataMip = mips[i];
+					const uint32_t mipDataSize = dataMip.mWidth * dataMip.mHeight * channelCount * channelDataSize;
+
+					mip->SizeX = dataMip.mWidth;
+					mip->SizeY = dataMip.mHeight;
+					mip->SizeZ = 1;
+
+					mip->BulkData.Lock(LOCK_READ_WRITE);
+					mip->BulkData.Realloc(mipDataSize);
+					mip->BulkData.Unlock();
+				}
+			}
+			else
+			{
+				platformData->Mips.Reset(mips.size());
+			}
+
+			texture->UpdateResource();
+		}
+
+
+		const int32 MipCount = mips.size();
+		const int32 Width = mWidth;
+		const int32 Height = mHeight;
+		const int32 BytesPerPixel = channelDataSize * channelCount;
+
+		for (size_t MipIndex = 0; MipIndex < MipCount; ++MipIndex)
+		{
+			Mip& mip = mips[MipIndex];
+			const int32 RowPitch = mip.mWidth * BytesPerPixel;
+			const int32 TotalBytes = RowPitch * mip.mHeight;
+
+			void* SrcData = mips[MipIndex].mPixels;
+
+			// Determine how many rows we can upload per batch
+			const size_t RowsPerBatch = FMath::Max(1u, maxBytesPerUpload / RowPitch);
+			const size_t NumBatches = FMath::DivideAndRoundUp(mip.mHeight, RowsPerBatch);
+
+			for (size_t BatchIndex = 0; BatchIndex < NumBatches; ++BatchIndex)
+			{
+				const size_t StartY = BatchIndex * RowsPerBatch;
+				const size_t BatchHeight = FMath::Min(RowsPerBatch, mip.mHeight - StartY);
+
+				uint8* BatchStart = (uint8*)SrcData + StartY * RowPitch;
+
+				FUpdateTextureRegion2D* region = new FUpdateTextureRegion2D(0,                // DestX
+																			StartY,           // DestY
+																			0,                // SrcX
+																			0,                // SrcY
+																			mip.mWidth,       // Width
+																			BatchHeight);		// Height
+
+				// Optional: wrap with cleanup if memory is temporary
+				texture->UpdateTextureRegions(MipIndex,
+											  1,
+											  region,
+											  RowPitch,
+											  BytesPerPixel,
+											  BatchStart, [](uint8* SrcData, const FUpdateTextureRegion2D* Regions)
+											  {
+												  delete Regions;
+											  });
+			}
+		}
 	}
 }

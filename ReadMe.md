@@ -10,7 +10,7 @@ CLWorks provides an OpenCL integration plugin for Unreal Engine. Enabling low-le
 
 ## Use Cases
 - **Custom GPU Compute Shaders**: Bypass HLSL material limitations and graphics pipeline restrictions by using OpenCL programs directly.
-- **Offline Processing**: Use the GPU for mesh generation, image processing, or terrain analysis.
+- **Offline Processing**: Use the GPU for mesh generation, image processing, or data analysis.
 - **Physics or Simulation Pipelines**: Run GPU parallel computations (e.g. fluid, cloth, or particle systems).
 - **Scientific or Data-Driven UE Apps**: Visualize and process large datasets on the GPU.
 
@@ -22,17 +22,31 @@ CLWorks provides an OpenCL integration plugin for Unreal Engine. Enabling low-le
 ## Testing
 The plugin utilizes Unreal Engine automation framework's SPECs(). It is possible to execute those test in two ways:
 1) Command line execution:
-   - UnrealEditor-Cmd.exe <PROJECT_HERE.uproject> -ExecCmds="Automation RunTests CLWorks Unit Test" -unattended -nopause
+   - `UnrealEditor-Cmd.exe <PROJECT_HERE.uproject> -ExecCmds="Automation RunTests CLWorks Unit Test" -unattended -nopause`
 2) Editor execution:
    - Open `Tools` -> `Session Frontend`. Navigate to the `Automation` tab.
    - Run the "CLWorks Unit Test" tests.
 
 
-### Plugin Outline
-#### OpenCL Structures:
- -
+## Plugin Outline
+### Blueprints
+Control Paths & Program
+![BP Control](./Resources/BP_Control.png)
 
-### Example Usage
+Buffer
+![BP Buffer](./Resources/BP_Buffer.png)
+
+Image
+![BP Image](./Resources/BP_Image.png)
+
+#### Classes
+
+
+#### Editor
+Program Editor
+![Editor](./Resources/Program_Editor.png)
+
+## Example Usage
 #### Program 
 
 
@@ -50,7 +64,6 @@ The plugin utilizes Unreal Engine automation framework's SPECs(). It is possible
 ### Future Roadmap
 - [ ] Texture2DArray Support
 - [ ] Texture3D Support
-- [ ] Blueprint Exposure
 - [ ] Benchmarking Framework
 - [ ] Asynchronous Data Transfer
 

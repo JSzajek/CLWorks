@@ -114,7 +114,8 @@ namespace OpenCL
 
 		void WriteToUTexture2D_Async(TObjectPtr<UTexture2D> texture, 
 									 void* src,
-									 bool genMips);
+									 bool genMips,
+									 uint32_t maxBytesPerUpload);
 	private:
 		cl_context mpContext = nullptr;
 		cl_device_id mpDevice = nullptr;

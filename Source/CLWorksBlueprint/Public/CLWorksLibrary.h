@@ -30,6 +30,9 @@ class UCLCommandQueueObject;
 class UCLImageObject;
 class UCLProgramObject;
 class UCLProgramAsset;
+
+class UTexture2D;
+class UTextureRenderTarget2D;
 // ----------------------------------------------
 
 UCLASS(MinimalAPI)
@@ -62,18 +65,6 @@ public:
 											  UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL")
-	static TArray<int32> ReadIntBuffer(UCLBufferObject* buffer,
-									   int32 numElements,
-									   UCLCommandQueueObject* queue,
-									   UCLContextObject* contextOverride = nullptr);
-
-	UFUNCTION(BlueprintCallable, Category = "OpenCL")
-	static TArray<float> ReadFloatBuffer(UCLBufferObject* buffer,
-										 int32 numElements,
-										 UCLCommandQueueObject* queue,
-										 UCLContextObject* contextOverride = nullptr);
-
-	UFUNCTION(BlueprintCallable, Category = "OpenCL")
 	static UCLImageObject* CreateImage(int32 width, 
 									   int32 height,
 									   UCLImageType type = UCLImageType::Texture2D,
@@ -83,7 +74,29 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL")
 	static bool RunProgram(UCLProgramObject* program,
-						   UCLCommandQueueObject* queue,
 						   int64 dimensions,
-						   const TArray<int64>& workCount);
+						   const TArray<int64>& workCount,
+						   UCLCommandQueueObject* queue = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static TArray<int32> ReadIntBuffer(UCLBufferObject* buffer,
+									   int32 numElements,
+									   UCLCommandQueueObject* queue = nullptr,
+									   UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static TArray<float> ReadFloatBuffer(UCLBufferObject* buffer,
+										 int32 numElements,
+										 UCLCommandQueueObject* queue = nullptr,
+										 UCLContextObject* contextOverride = nullptr);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static UTexture2D* ExportImageToTexture2D(UCLImageObject* image,
+											  UCLCommandQueueObject* queue = nullptr,
+											  bool generateMipMaps = false);
+
+	UFUNCTION(BlueprintCallable, Category = "OpenCL")
+	static bool ExportImageToRenderTarget2D(UTextureRenderTarget2D* output,
+										    UCLImageObject* image,
+										    UCLCommandQueueObject* queue = nullptr);
 };
