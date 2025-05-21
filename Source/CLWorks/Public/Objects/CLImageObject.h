@@ -23,6 +23,13 @@ protected:
 					  int32_t height,
 					  UCLImageFormat format,
 					  UCLAccessType type);
+
+	void Initialize2DArray(const TObjectPtr<UCLContextObject>& context,
+						   int32_t width,
+						   int32_t height,
+						   int32_t slices,
+						   UCLImageFormat format,
+						   UCLAccessType type);
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CLWorks")
 	int32 Width = 0;

@@ -6,6 +6,8 @@ namespace OpenCL
 	{
 		READ_ONLY,
 		WRITE_ONLY,
-		READ_WRITE
+		READ_WRITE,
+
+		COUNT
 	};
 }

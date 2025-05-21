@@ -228,7 +228,7 @@ TArray<float> UCLWorksLibrary::ReadFloatBuffer(UCLBufferObject* buffer,
 	return output;
 }
 
-UTexture2D* UCLWorksLibrary::ExportImageToTexture2D(UCLImageObject* image, 
+UTexture2D* UCLWorksLibrary::ImageToTexture2D(UCLImageObject* image, 
 													UCLCommandQueueObject* queue,
 													bool generateMipMaps)
 {
@@ -243,7 +243,22 @@ UTexture2D* UCLWorksLibrary::ExportImageToTexture2D(UCLImageObject* image,
 	return image->mpImage->CreateUTexture2D(commandQueue, generateMipMaps);
 }
 
-bool UCLWorksLibrary::ExportImageToRenderTarget2D(UTextureRenderTarget2D* output,
+UTexture2DArray* UCLWorksLibrary::ImageToTexture2DArray(UCLImageObject* image, 
+														UCLCommandQueueObject* queue, 
+														bool generateMipMaps)
+{
+	if (image->GetData() == nullptr)
+	{
+		UE_LOG(LogCLWorksBlueprint, Warning, TEXT("Invalid Image!"));
+		return nullptr;
+	}
+
+	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
+
+	return image->mpImage->CreateUTexture2DArray(commandQueue, generateMipMaps);
+}
+
+bool UCLWorksLibrary::ImageToRenderTarget2D(UTextureRenderTarget2D* output,
 												  UCLImageObject* image, 
 												  UCLCommandQueueObject* queue)
 {

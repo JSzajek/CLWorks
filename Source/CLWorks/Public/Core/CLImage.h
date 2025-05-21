@@ -93,8 +93,16 @@ namespace OpenCL
 								bool genMips = false);
 		
 
-		TObjectPtr<UTexture2DArray> CreateUTexture2DArray();
-		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture);
+		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(const OpenCL::CommandQueue& queue,
+														  bool genMips = false);
+		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(cl_command_queue queueOverride = nullptr,
+														  bool genMips = false);
+		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,
+									 const OpenCL::CommandQueue& queue,
+									 bool genMips = false);
+		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,
+									 cl_command_queue queueOverride = nullptr,
+									 bool genMips = false);
 
 		TObjectPtr<UVolumeTexture> CreateUVolumeTexture();
 		bool UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> texture);
@@ -105,8 +113,8 @@ namespace OpenCL
 						cl_command_queue overrideQueue = nullptr,
 						bool isBlocking = true) const;
 
-		bool GenerateMips(std::vector<Mip>& output,
-						  void* src);
+		bool GenerateMips2D(std::vector<Mip>& output,
+							void* src);
 
 		void WriteToUTexture2D(TObjectPtr<UTexture2D> texture, 
 							   void* src,
@@ -116,6 +124,10 @@ namespace OpenCL
 									 void* src,
 									 bool genMips,
 									 uint32_t maxBytesPerUpload);
+
+		void WriteToUTexture2DArray(TObjectPtr<UTexture2DArray> texture, 
+									void* src,
+									bool genMips);
 	private:
 		cl_context mpContext = nullptr;
 		cl_device_id mpDevice = nullptr;

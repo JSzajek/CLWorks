@@ -10,17 +10,20 @@ namespace MipGenerator
 								 uint8_t* const src,
 								 size_t srcWidth, 
 								 size_t srcHeight,
+								 size_t srcLayers,
 								 uint8_t srcChannels);
 
 	static void GenerateMipsFloat16(std::vector<Mip>& output,
 									FFloat16* const src,
 									size_t srcWidth,
 									size_t srcHeight,
+									size_t srcLayers,
 									uint8_t srcChannels);
 
 	static void GenerateMipsFloat(std::vector<Mip>& output,
 								  float* const src,
 								  size_t srcWidth,
 								  size_t srcHeight,
+								  size_t srcLayers,
 								  uint8_t srcChannels);
 }
