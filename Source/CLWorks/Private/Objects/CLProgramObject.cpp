@@ -25,27 +25,42 @@ bool UCLProgramObject::IsValid() const
 bool UCLProgramObject::SetIntArg(int32 index, int32 integer)
 {
 	if (mpKernel)
-	{
-		return mpKernel->SetArgument<int32>(index, integer);
-	}
-	return false;
-}
-
-bool UCLProgramObject::SetLongIntArg(int32 index, int64 longinteger)
-{
-	if (mpKernel)
-	{
-		return mpKernel->SetArgument<int64>(index, longinteger);
-	}
+		return mpKernel->SetArgument(index, integer);
 	return false;
 }
 
 bool UCLProgramObject::SetFloatArg(int32 index, float scalar)
 {
 	if (mpKernel)
-	{
-		return mpKernel->SetArgument<float>(index, scalar);
-	}
+		return mpKernel->SetArgument(index, scalar);
+	return false;
+}
+
+bool UCLProgramObject::SetIntVector2Arg(int32 index, const FIntPoint& vec)
+{
+	if (mpKernel)
+		return mpKernel->SetArgument(index, vec);
+	return false;
+}
+
+bool UCLProgramObject::SetIntVector4Arg(int32 index, const FIntVector4& vec)
+{
+	if (mpKernel)
+		return mpKernel->SetArgument(index, vec);
+	return false;
+}
+
+bool UCLProgramObject::SetVector2fArg(int32 index, const FVector2f& vec)
+{
+	if (mpKernel)
+		return mpKernel->SetArgument(index, vec);
+	return false;
+}
+
+bool UCLProgramObject::SetVector4fArg(int32 index, const FVector4f& vec)
+{
+	if (mpKernel)
+		return mpKernel->SetArgument(index, vec);
 	return false;
 }
 

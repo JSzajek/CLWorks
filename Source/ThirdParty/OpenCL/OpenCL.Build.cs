@@ -42,6 +42,8 @@ public class OpenCL : ModuleRules
                 }
             }
             // ------------------------------------------------------------------------------------
+
+            PublicDefinitions.Add("CL_TARGET_OPENCL_VERSION=300");
         }
 	}
 }

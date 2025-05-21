@@ -135,6 +135,82 @@ UCLBufferObject* UCLWorksLibrary::CreateFloatBuffer(const TArray<float>& values,
 	return buffer;
 }
 
+UCLBufferObject* UCLWorksLibrary::CreateIntVector2Buffer(const TArray<FIntPoint>& values,
+														 UCLAccessType access, 
+														 UCLContextObject* contextOverride)
+{
+	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
+
+	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
+					   (void*)values.GetData(),
+					   values.Num() * sizeof(FIntPoint),
+					   access);
+
+	if (!buffer->GetData())
+	{
+		buffer->ConditionalBeginDestroy();
+		return nullptr;
+	}
+	return buffer;
+}
+
+UCLBufferObject* UCLWorksLibrary::CreateIntVector4Buffer(const TArray<FIntVector4>& values,
+														 UCLAccessType access, 
+														 UCLContextObject* contextOverride)
+{
+	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
+
+	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
+					   (void*)values.GetData(),
+					   values.Num() * sizeof(FIntVector4),
+					   access);
+
+	if (!buffer->GetData())
+	{
+		buffer->ConditionalBeginDestroy();
+		return nullptr;
+	}
+	return buffer;
+}
+
+UCLBufferObject* UCLWorksLibrary::CreateVector2fBuffer(const TArray<FVector2f>& values,
+													   UCLAccessType access, 
+													   UCLContextObject* contextOverride)
+{
+	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
+
+	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
+					   (void*)values.GetData(),
+					   values.Num() * sizeof(FVector2f),
+					   access);
+
+	if (!buffer->GetData())
+	{
+		buffer->ConditionalBeginDestroy();
+		return nullptr;
+	}
+	return buffer;
+}
+
+UCLBufferObject* UCLWorksLibrary::CreateVector4fBuffer(const TArray<FVector4f>& values,
+													   UCLAccessType access, 
+													   UCLContextObject* contextOverride)
+{
+	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
+
+	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
+					   (void*)values.GetData(),
+					   values.Num() * sizeof(FVector4f),
+					   access);
+
+	if (!buffer->GetData())
+	{
+		buffer->ConditionalBeginDestroy();
+		return nullptr;
+	}
+	return buffer;
+}
+
 UCLImageObject* UCLWorksLibrary::CreateImage(int32 width, 
 											 int32 height, 
 											 UCLImageType type, 
@@ -223,6 +299,70 @@ TArray<float> UCLWorksLibrary::ReadFloatBuffer(UCLBufferObject* buffer,
 	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
 	commandQueue.ReadBuffer(*buffer->mpBuffer,
 						    numElements * sizeof(float),
+						    output.GetData());
+
+	return output;
+}
+
+TArray<FIntPoint> UCLWorksLibrary::ReadIntVector2Buffer(UCLBufferObject* buffer, 
+														int32 numElements, 
+														UCLCommandQueueObject* queue, 
+														UCLContextObject* contextOverride)
+{
+	TArray<FIntPoint> output;
+	output.SetNumZeroed(numElements);
+
+	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
+	commandQueue.ReadBuffer(*buffer->mpBuffer,
+						    numElements * sizeof(FIntPoint),
+						    output.GetData());
+
+	return output;
+}
+
+TArray<FIntVector4> UCLWorksLibrary::ReadIntVector4Buffer(UCLBufferObject* buffer, 
+														  int32 numElements, 
+														  UCLCommandQueueObject* queue, 
+														  UCLContextObject* contextOverride)
+{
+	TArray<FIntVector4> output;
+	output.SetNumZeroed(numElements);
+
+	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
+	commandQueue.ReadBuffer(*buffer->mpBuffer,
+						    numElements * sizeof(FIntVector4),
+						    output.GetData());
+
+	return output;
+}
+
+TArray<FVector2f> UCLWorksLibrary::ReadVector2fBuffer(UCLBufferObject* buffer, 
+													  int32 numElements, 
+													  UCLCommandQueueObject* queue, 
+													  UCLContextObject* contextOverride)
+{
+	TArray<FVector2f> output;
+	output.SetNumZeroed(numElements);
+
+	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
+	commandQueue.ReadBuffer(*buffer->mpBuffer,
+						    numElements * sizeof(FVector2f),
+						    output.GetData());
+
+	return output;
+}
+
+TArray<FVector4f> UCLWorksLibrary::ReadVector4fBuffer(UCLBufferObject* buffer, 
+													  int32 numElements, 
+													  UCLCommandQueueObject* queue, 
+													  UCLContextObject* contextOverride)
+{
+	TArray<FVector4f> output;
+	output.SetNumZeroed(numElements);
+
+	OpenCL::CommandQueue& commandQueue = queue ? *queue->mpQueue : *mpGlobalQueue->mpQueue;
+	commandQueue.ReadBuffer(*buffer->mpBuffer,
+						    numElements * sizeof(FVector4f),
 						    output.GetData());
 
 	return output;

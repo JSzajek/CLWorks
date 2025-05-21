@@ -35,15 +35,6 @@ public:
 	bool SetIntArg(int32 index, int32 integer);
 
 	/// <summary>
-	/// Sets a long integer argument.
-	/// </summary>
-	/// <param name="index">The argument index</param>
-	/// <param name="longinteger">The long integer</param>
-	/// <returns>True if the operation was successful</returns>
-	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Int64 Argument")
-	bool SetLongIntArg(int32 index, int64 longinteger);
-
-	/// <summary>
 	/// Sets a float argument.
 	/// </summary>
 	/// <param name="index">The argument index</param>
@@ -51,6 +42,42 @@ public:
 	/// <returns>True if the operation was successful</returns>
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Float Argument")
 	bool SetFloatArg(int32 index, float scalar);
+
+	/// <summary>
+	/// Sets a integer vec2 argument.
+	/// </summary>
+	/// <param name="index">The argument index</param>
+	/// <param name="vec">The vector</param>
+	/// <returns>True if the operation was successful</returns>
+	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Integer Vec2 Argument")
+	bool SetIntVector2Arg(int32 index, const FIntPoint& vec);
+
+	/// <summary>
+	/// Sets a integer vec4 argument.
+	/// </summary>
+	/// <param name="index">The argument index</param>
+	/// <param name="vec">The vector</param>
+	/// <returns>True if the operation was successful</returns>
+	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Integer Vec4 Argument")
+	bool SetIntVector4Arg(int32 index, const FIntVector4& vec);
+
+	/// <summary>
+	/// Sets a float vec2 argument.
+	/// </summary>
+	/// <param name="index">The argument index</param>
+	/// <param name="vec">The vector</param>
+	/// <returns>True if the operation was successful</returns>
+	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Float Vec2 Argument")
+	bool SetVector2fArg(int32 index, const FVector2f& vec);
+
+	/// <summary>
+	/// Sets a float vec4 argument.
+	/// </summary>
+	/// <param name="index">The argument index</param>
+	/// <param name="vec">The vector</param>
+	/// <returns>True if the operation was successful</returns>
+	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Set Float Vec4 Argument")
+	bool SetVector4fArg(int32 index, const FVector4f& vec);
 
 	/// <summary>
 	/// Sets a buffer argument.

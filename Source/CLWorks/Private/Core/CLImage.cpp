@@ -137,7 +137,7 @@ namespace OpenCL
 		if (mType != Type::Texture2D)
 		{
 			UE_LOG(LogCLWorks, Warning, TEXT("Mismatching Image Type: %d"), mType);
-			return false;
+			return nullptr;
 		}
 
 		if (!mpImage)
