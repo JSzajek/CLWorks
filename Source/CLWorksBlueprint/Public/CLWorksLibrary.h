@@ -96,56 +96,56 @@ public:
 	static bool RunProgram(UCLProgramObject* program,
 						   int64 dimensions,
 						   const TArray<int64>& workCount,
-						   UCLCommandQueueObject* queue = nullptr);
+						   UCLCommandQueueObject* queueOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Integer Buffer")
 	static TArray<int32> ReadIntBuffer(UCLBufferObject* buffer,
 									   int32 numElements,
-									   UCLCommandQueueObject* queue = nullptr,
+									   UCLCommandQueueObject* queueOverride = nullptr,
 									   UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Float Buffer")
 	static TArray<float> ReadFloatBuffer(UCLBufferObject* buffer,
 										 int32 numElements,
-										 UCLCommandQueueObject* queue = nullptr,
+										 UCLCommandQueueObject* queueOverride = nullptr,
 										 UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Integer Vec2 Buffer")
 	static TArray<FIntPoint> ReadIntVector2Buffer(UCLBufferObject* buffer,
 												  int32 numElements,
-												  UCLCommandQueueObject* queue = nullptr,
+												  UCLCommandQueueObject* queueOverride = nullptr,
 												  UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Integer Vec4 Buffer")
 	static TArray<FIntVector4> ReadIntVector4Buffer(UCLBufferObject* buffer,
 													int32 numElements,
-													UCLCommandQueueObject* queue = nullptr,
+													UCLCommandQueueObject* queueOverride = nullptr,
 													UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Float Vec2 Buffer")
 	static TArray<FVector2f> ReadVector2fBuffer(UCLBufferObject* buffer,
 												int32 numElements,
-												UCLCommandQueueObject* queue = nullptr,
+												UCLCommandQueueObject* queueOverride = nullptr,
 												UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Read Float Vec4 Buffer")
 	static TArray<FVector4f> ReadVector4fBuffer(UCLBufferObject* buffer,
 												int32 numElements,
-												UCLCommandQueueObject* queue = nullptr,
+												UCLCommandQueueObject* queueOverride = nullptr,
 												UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Convert To Texture2D")
 	static UTexture2D* ImageToTexture2D(UCLImageObject* image,
-									    UCLCommandQueueObject* queue = nullptr,
+									    UCLCommandQueueObject* queueOverride = nullptr,
 									    bool generateMipMaps = false);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Convert To Texture2DArray")
 	static UTexture2DArray* ImageToTexture2DArray(UCLImageObject* image,
-												  UCLCommandQueueObject* queue = nullptr,
+												  UCLCommandQueueObject* queueOverride = nullptr,
 												  bool generateMipMaps = false);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Write To UTextureRenderTarget2D")
 	static bool ImageToRenderTarget2D(UTextureRenderTarget2D* output,
 									  UCLImageObject* image,
-									  UCLCommandQueueObject* queue = nullptr);
+									  UCLCommandQueueObject* queueOverride = nullptr);
 };

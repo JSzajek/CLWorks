@@ -28,33 +28,91 @@ The plugin utilizes Unreal Engine automation framework's SPECs(). It is possible
    - Run the "CLWorks Unit Test" tests.
 
 
-## Plugin Outline
-### Blueprints
-Control Paths & Program
+## Core Classes
+### CLContext
+Represents an OpenCL context. Manages the lifetime of all OpenCL resources (programs, buffers, images, etc.) and encapsulates the selected platform and device.
+ - Automatically created or can be user-managed.
+ - Central hub for GPU resource management.
+> Blueprint Note: When Using Blueprints, a shared global context is provided automatically unless manually overridden. 
+
+### CLDevice
+Represents an OpenCL-capable device (GPU or CPU).
+- Use this to query capabilities, memory size, supported extensions, etc.
+
+### CLProgram/CLProgamAsset
+Represents a compiled OpenCL shader program.
+ - Program Asset source code is editable in Unreal Editor.
+ - Supports multi-kernel source files.
+> Editor Note: Source code text editor is provided in the Editor and provides both compilation checking and error logging to expedite development.
+
+
+### CLCommandQueue
+Represents the command queue used to dispatch program execution and memory transfers.
+- Created per context/device.
+- Suuports async dispatches (if avaliable).
+> Blueprint Note: When Using Blueprints, a shared global command queue is provided automatically unless manually overridden. 
+
+
+### CLBuffer
+Represents a linear memory buffer (e.g. float[], int[], struct[]).
+- Mappable to and from Unreal TArrays (i.e. TArray\<float>).
+- Can be shared and transferred between CPU and GPU.
+> Blueprint Note: Compatible functions are Upload and Readback.
+
+### CLImage
+Represents a 2D or 3D image or image array.
+- Ideal for texture style data and operations.
+- Read/Write support.
+- Compatible with Unreal Textures (UTexture2D, UTexture2DArray).
+
+## Blueprints
+### Control Paths & Program
 ![BP Control](./Resources/BP_Control.png)
 
-Buffer
+### Buffer
 ![BP Buffer](./Resources/BP_Buffer.png)
 
-Image
+### Image
 ![BP Image](./Resources/BP_Image.png)
 
-#### Classes
 
 
-#### Editor
-Program Editor
+## Editor
+### Program Editor
 ![Editor](./Resources/Program_Editor.png)
 
 ## Example Usage
 #### Program 
-
+```
+```
 
 #### Buffer Creation
+```
+OpenCL::Device device;
+OpenCL::Context context(device);
 
+const size_t count = 10;
+std::vector<float> src_data(count, 0.0f);
+OpenCL::Buffer buffer(context, 
+                      src_data.data(), 
+                      count * sizeof(float), 
+                      OpenCL::AccessType::READ_WRITE);
+```
 
 #### Texture Creation
+```
+OpenCL::Device device;
+OpenCL::Context context(device);
 
+OpenCL::Image cltexture(context,
+                        mDefaultDevice,
+                        256, 
+                        256, 
+                        1,		
+                        OpenCL::Image::Format::RGBA8, 
+                        OpenCL::Image::Type::Texture2D,
+                        OpenCL::AccessType::READ_WRITE);
+```
 
 ### Dependencies
  - OpenCL 1.2 or later (avaliable via CPU or GPU drivers).
@@ -62,10 +120,10 @@ Program Editor
  - C++20 compatible compiler.
 
 ### Future Roadmap
-- [ ] Texture2DArray Support
 - [ ] Texture3D Support
 - [ ] Benchmarking Framework
 - [ ] Asynchronous Data Transfer
+- [ ] Vulkan/DirectX12 Interop
 
 ### License
 Licenses Under the **Apache 2.0** License.
