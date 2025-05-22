@@ -1,5 +1,5 @@
 # CLWorks a OpenCL Plugin for Unreal Engine
-CLWorks provides an OpenCL integration plugin for Unreal Engine. Enabling low-level access to GPU compute capabilities from within UE Projects. It forms a bridge between OpenCL compute kernels and Unreal Engine data structures (i.e. UTexture, FRHIBuffer, etc.). Allowing the use of heterogenous compute across AMD, Intel, and NVIDIA hardware.
+CLWorks provides an OpenCL integration plugin for Unreal Engine. Enabling low-level access to GPU compute capabilities from within UE Projects. It forms a bridge between OpenCL compute kernels and Unreal Engine data structures (i.e. UTexture, FRHIBuffer, etc.). Allowing the use of GPU compute across AMD, Intel, and NVIDIA hardware.
 
 ## Features
 - Load/Compile and Execute OpenCL program at runtime.
@@ -84,6 +84,11 @@ Represents a 2D or 3D image or image array.
 ## Example Usage
 #### Program 
 ```
+OpenCL::Device device;
+OpenCL::Context context(device);
+
+OpenCL::Program program(context, mDefaultDevice);
+program.ReadFromString("__kernel void test() { }");
 ```
 
 #### Buffer Creation
