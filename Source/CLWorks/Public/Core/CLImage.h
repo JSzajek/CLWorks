@@ -5,6 +5,8 @@
 
 #include "Core/ImageDefines.h"
 
+#include <functional>
+
 class UTexture2D;
 class UTexture2DArray;
 class UVolumeTexture;
@@ -81,31 +83,32 @@ namespace OpenCL
 		size_t GetChannelDataSize() const;
 		size_t GetDataSize() const;
 
-		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue,
-												bool genMips = false);
 		TObjectPtr<UTexture2D> CreateUTexture2D(cl_command_queue queueOverride = nullptr,
-												bool genMips = false);
-		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
-								const OpenCL::CommandQueue& queue,
-								bool genMips = false);
-		bool UploadToUTexture2D(TObjectPtr<UTexture2D> texture,
-								cl_command_queue queueOverride = nullptr,
-								bool genMips = false);
-		
+												bool genMips = false,
+												bool async = false,
+												uint32_t maxBytesPerUpload = 64 * 2048);
 
-		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(const OpenCL::CommandQueue& queue,
-														  bool genMips = false);
 		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(cl_command_queue queueOverride = nullptr,
 														  bool genMips = false);
-		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,
-									 const OpenCL::CommandQueue& queue,
-									 bool genMips = false);
-		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,
+
+		TObjectPtr<UVolumeTexture> CreateUVolumeTexture(cl_command_queue queueOverride = nullptr);
+
+		bool UploadToUTexture2D(TObjectPtr<UTexture2D> output,
+								cl_command_queue queueOverride = nullptr,
+								bool genMips = false,
+								bool async = false,
+								uint32_t maxBytesPerUpload = 64 * 2048);
+		
+		bool UploadToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> output,
+											cl_command_queue queueOverride = nullptr,
+											bool genMips = false);
+
+		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
 									 cl_command_queue queueOverride = nullptr,
 									 bool genMips = false);
 
-		TObjectPtr<UVolumeTexture> CreateUVolumeTexture();
-		bool UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> texture);
+		bool UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> output,
+									cl_command_queue queueOverride = nullptr);
 	private:
 		cl_mem CreateCLImage();
 
@@ -123,7 +126,14 @@ namespace OpenCL
 		void WriteToUTexture2D_Async(TObjectPtr<UTexture2D> texture, 
 									 void* src,
 									 bool genMips,
-									 uint32_t maxBytesPerUpload);
+									 uint32_t maxBytesPerUpload,
+									 const std::function<void()>& onUploadComplete = nullptr);
+
+		void WriteToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> texture,
+										   void* src);
+
+		void WriteToUTextureRenderTarget2D_Async(TObjectPtr<UTextureRenderTarget2D> texture,
+												 void* src);
 
 		void WriteToUTexture2DArray(TObjectPtr<UTexture2DArray> texture, 
 									void* src,

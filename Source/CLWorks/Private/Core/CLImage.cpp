@@ -7,6 +7,7 @@
 #include "Utils/MipGenerator.h"
 
 #include "Engine/Texture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
 #include "Engine/Texture2DArray.h"
 #include "Engine/VolumeTexture.h"
 
@@ -125,14 +126,10 @@ namespace OpenCL
 		return 0;
 	}
 
-	TObjectPtr<UTexture2D> Image::CreateUTexture2D(const OpenCL::CommandQueue& queue,
-												   bool genMips)
-	{
-		return CreateUTexture2D(queue.Get(), genMips);
-	}
-
 	TObjectPtr<UTexture2D> Image::CreateUTexture2D(cl_command_queue queueOverride,
-												   bool genMips)
+												   bool genMips,
+												   bool async,
+												   uint32_t maxBytesPerUpload)
 	{
 		if (mType != Type::Texture2D)
 		{
@@ -167,62 +164,16 @@ namespace OpenCL
 		texture->GetPlatformData()->SetNumSlices(1);
 		texture->GetPlatformData()->PixelFormat = pixelFormat;
 		
-		//WriteToUTexture2D(texture, pixelData, genMips);
-		WriteToUTexture2D_Async(texture, pixelData, genMips, 64 * 2048);
+		if (async)
+		{
+			WriteToUTexture2D_Async(texture, pixelData, genMips, maxBytesPerUpload);
+		}
+		else
+		{
+			WriteToUTexture2D(texture, pixelData, genMips);
+		}
 
-		// Trigger render resource update
-		//output->UpdateResource();
-		
 		return texture;
-	}
-
-	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> texture, 
-								   const OpenCL::CommandQueue& queue,
-								   bool genMips)
-	{
-		return UploadToUTexture2D(texture, queue.Get(), genMips);
-	}
-
-	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> output,
-								   cl_command_queue queueOverride,
-								   bool genMips)
-	{
-		if (mType != Type::Texture2D)
-		{
-			UE_LOG(LogCLWorks, Warning, TEXT("Mismatching Image Type: %d"), mType);
-			return false;
-		}
-
-		const size_t output_width = output->GetSizeX();
-		const size_t output_height = output->GetSizeY();
-		if (output_width != mWidth || output_height != mHeight)
-		{
-			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture with Size: %d x %d to Output Size: %d x %d!"), mWidth, mHeight, output_width, output_height);
-			return false;
-		}
-
-		const size_t internal_dataSize = GetDataSize();
-		const size_t output_dataSize = output_width * output_height * GPixelFormats[output->GetPixelFormat()].BlockBytes;
-		if (internal_dataSize != output_dataSize)
-		{
-			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture Format - Input Data Size: %d to Output Data Size: %d!"), internal_dataSize, output_dataSize);
-			return false;
-		}
-
-		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
-			return false;
-
-		//WriteToUTexture2D(output, pixelData, genMips);
-		WriteToUTexture2D_Async(output, pixelData, genMips, 64 * 2048);
-
-		return true;
-	}
-
-	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray(const OpenCL::CommandQueue& queue, 
-															 bool genMips)
-	{
-		return CreateUTexture2DArray(queue.Get(), genMips);
 	}
 
 	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray(cl_command_queue queueOverride, 
@@ -266,11 +217,88 @@ namespace OpenCL
 		return texture;
 	}
 
-	bool Image::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
-										const OpenCL::CommandQueue& queue, 
-										bool genMips)
+	TObjectPtr<UVolumeTexture> Image::CreateUVolumeTexture(cl_command_queue queueOverride)
 	{
-		return UploadToUTexture2DArray(output, queue.Get(), genMips);
+		throw std::exception("Not Implemented");
+	}
+
+	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> output,
+								   cl_command_queue queueOverride,
+								   bool genMips,
+								   bool async,
+								   uint32_t maxBytesPerUpload)
+	{
+		if (mType != Type::Texture2D)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatching Image Type: %d"), mType);
+			return false;
+		}
+
+		const size_t output_width = output->GetSizeX();
+		const size_t output_height = output->GetSizeY();
+		if (output_width != mWidth || output_height != mHeight)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture with Size: %d x %d to Output Size: %d x %d!"), mWidth, mHeight, output_width, output_height);
+			return false;
+		}
+
+		const size_t internal_dataSize = GetDataSize();
+		const size_t output_dataSize = output_width * output_height * GPixelFormats[output->GetPixelFormat()].BlockBytes;
+		if (internal_dataSize != output_dataSize)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture Format - Input Data Size: %d to Output Data Size: %d!"), internal_dataSize, output_dataSize);
+			return false;
+		}
+
+		void* pixelData = nullptr;
+		if (!ReadFromCL(&pixelData, queueOverride))
+			return false;
+
+		if (async)
+		{
+			WriteToUTexture2D_Async(output, pixelData, genMips, maxBytesPerUpload);
+		}
+		else
+		{
+			WriteToUTexture2D(output, pixelData, genMips);
+		}
+
+		return true;
+	}
+
+	bool Image::UploadToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> output, 
+											   cl_command_queue queueOverride, 
+											   bool genMips)
+	{
+		if (mType != Type::Texture2D)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatching Image Type: %d"), mType);
+			return false;
+		}
+
+		const size_t output_width = output->GetSurfaceWidth();
+		const size_t output_height = output->GetSurfaceHeight();
+		if (output_width != mWidth || output_height != mHeight)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture with Size: %d x %d to Output Size: %d x %d!"), mWidth, mHeight, output_width, output_height);
+			return false;
+		}
+
+		const size_t internal_dataSize = GetDataSize();
+		const size_t output_dataSize = output_width * output_height * GPixelFormats[output->GetFormat()].BlockBytes;
+		if (internal_dataSize != output_dataSize)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Mismatched Texture Format - Input Data Size: %d to Output Data Size: %d!"), internal_dataSize, output_dataSize);
+			return false;
+		}
+
+		void* pixelData = nullptr;
+		if (!ReadFromCL(&pixelData, queueOverride))
+			return false;
+
+
+
+		return false;
 	}
 
 	bool Image::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
@@ -315,16 +343,11 @@ namespace OpenCL
 		return true;
 	}
 
-	TObjectPtr<UVolumeTexture> Image::CreateUVolumeTexture()
-	{
-		// TODO:: Implement
-		return nullptr;
-	}
 
-	bool Image::UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> texture)
+	bool Image::UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> output,
+									   cl_command_queue queueOverride)
 	{
-		// TODO:: Implement
-		return false;
+		throw std::exception("Not Implemented");
 	}
 
 	cl_mem Image::CreateCLImage()
@@ -582,7 +605,8 @@ namespace OpenCL
 	void Image::WriteToUTexture2D_Async(TObjectPtr<UTexture2D> texture, 
 										void* src,
 										bool genMips,
-										uint32_t maxBytesPerUpload)
+										uint32_t maxBytesPerUpload,
+										const std::function<void()>& onUploadComplete)
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2D_Async());
 
@@ -630,11 +654,12 @@ namespace OpenCL
 			texture->UpdateResource();
 		}
 
-
 		const int32 MipCount = mips.size();
 		const int32 Width = mWidth;
 		const int32 Height = mHeight;
 		const int32 BytesPerPixel = channelDataSize * channelCount;
+
+		std::atomic<size_t>* counter = new std::atomic<size_t>(0);
 
 		for (size_t MipIndex = 0; MipIndex < MipCount; ++MipIndex)
 		{
@@ -648,36 +673,57 @@ namespace OpenCL
 			const size_t RowsPerBatch = FMath::Max(1u, maxBytesPerUpload / RowPitch);
 			const size_t NumBatches = FMath::DivideAndRoundUp(mip.mHeight, RowsPerBatch);
 
+			FUpdateTextureRegion2D* regions =  new FUpdateTextureRegion2D[NumBatches];
 			for (size_t BatchIndex = 0; BatchIndex < NumBatches; ++BatchIndex)
 			{
-				const size_t StartY = BatchIndex * RowsPerBatch;
-				const size_t BatchHeight = FMath::Min(RowsPerBatch, mip.mHeight - StartY);
+				const size_t TargetY = BatchIndex * RowsPerBatch;
+				const size_t BatchHeight = FMath::Min(RowsPerBatch, mip.mHeight - TargetY);
 
-				uint8* BatchStart = (uint8*)SrcData + StartY * RowPitch;
+				FUpdateTextureRegion2D& region = regions[BatchIndex];
 
-				FUpdateTextureRegion2D* region = new FUpdateTextureRegion2D(0,					// DestX
-																			StartY,				// DestY
-																			0,					// SrcX
-																			0,					// SrcY
-																			mip.mWidth,			// Width
-																			BatchHeight);		// Height
-
-				// Optional: wrap with cleanup if memory is temporary
-				texture->UpdateTextureRegions(MipIndex,
-											  1,
-											  region,
-											  RowPitch,
-											  BytesPerPixel,
-											  BatchStart, [](uint8* SrcData, const FUpdateTextureRegion2D* Regions)
-											  {
-												  // TODO:: Clean up Source Data
-												  delete Regions;
-											  });
+				region.DestX = 0;
+				region.DestY = TargetY;
+				region.SrcX = 0;
+				region.SrcY = TargetY;
+				region.Width = mip.mWidth;
+				region.Height = BatchHeight;
 			}
+
+			texture->UpdateTextureRegions(MipIndex,
+										  NumBatches,
+										  regions,
+										  RowPitch,
+										  BytesPerPixel,
+										  (uint8*)SrcData, [counter, MipCount, onUploadComplete](uint8* SrcData, const FUpdateTextureRegion2D* Regions)
+										  {
+												delete[] SrcData;
+												delete[] Regions;
+
+												(*counter)++;
+												if (*counter == MipCount)
+												{
+													if (onUploadComplete)
+														onUploadComplete();
+
+													delete counter;
+												}
+										  });
 		}
 	}
 
-	void Image::WriteToUTexture2DArray(TObjectPtr<UTexture2DArray> texture, 
+	void Image::WriteToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> texture, 
+											  void* src)
+	{
+		
+	}
+
+	void Image::WriteToUTextureRenderTarget2D_Async(TObjectPtr<UTextureRenderTarget2D> texture, 
+													void* src)
+	{
+
+	}
+
+	void Image::WriteToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,
 									   void* src, 
 									   bool genMips)
 	{

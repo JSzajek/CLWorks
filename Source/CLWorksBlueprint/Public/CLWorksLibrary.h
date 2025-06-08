@@ -144,7 +144,7 @@ public:
 												  UCLCommandQueueObject* queueOverride = nullptr,
 												  bool generateMipMaps = false);
 
-	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Write To UTextureRenderTarget2D")
+	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Write To RenderTarget2D")
 	static bool ImageToRenderTarget2D(UTextureRenderTarget2D* output,
 									  UCLImageObject* image,
 									  UCLCommandQueueObject* queueOverride = nullptr);

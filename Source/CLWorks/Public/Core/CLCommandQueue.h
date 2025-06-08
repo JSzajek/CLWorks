@@ -23,6 +23,8 @@ namespace OpenCL
 
 		~CommandQueue();
 	public:
+		operator cl_command_queue() const { return mpCommandQueue; };
+	public:
 		cl_command_queue Get() const { return mpCommandQueue; };
 
 		bool IsValid() const { return mIsValid; }
