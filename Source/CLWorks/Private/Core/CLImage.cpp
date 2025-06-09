@@ -303,7 +303,7 @@ namespace OpenCL
 
 
 		// Blit Texture2D to RenderTarget2D
-		UTextureUtils::CopyTextureToRenderTarget(texture, output);
+		UTextureUtils::BlitTextureToRenderTarget(texture, output);
 
 		return false;
 	}

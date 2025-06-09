@@ -5,7 +5,7 @@
 
 namespace UTextureUtils
 {
-	static bool CopyTextureToRenderTarget(const TObjectPtr<UTexture2D> source,
+	static bool BlitTextureToRenderTarget(const TObjectPtr<UTexture2D> source,
 										  TObjectPtr<UTextureRenderTarget2D>& output,
 										  FIntPoint subRect = FIntPoint::ZeroValue);
 };
