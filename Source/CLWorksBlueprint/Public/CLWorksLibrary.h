@@ -145,7 +145,7 @@ public:
 												  bool generateMipMaps = false);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Write To RenderTarget2D")
-	static bool ImageToRenderTarget2D(UTextureRenderTarget2D* output,
+	static bool WriteToRenderTarget2D(UTextureRenderTarget2D* output,
 									  UCLImageObject* image,
 									  UCLCommandQueueObject* queueOverride = nullptr);
 };

@@ -32,15 +32,20 @@ namespace OpenCL
 		{
 			Undefined = 0,
 
-			// Data Type
+			// Data Type ----------------------------------
 			UChar		= 1 << 0,
 			HalfFloat	= 1 << 1,
 			Float		= 1 << 2,
+			// --------------------------------------------
 
-			// Channels
+
+			// Channels -----------------------------------
 			R			= 1 << 3,
 			RGBA		= 1 << 4,
+			// --------------------------------------------
 
+
+			// Short-hand Combinations --------------------
 			R8			= R | UChar,
 			RGBA8		= RGBA |UChar,
 
@@ -49,6 +54,7 @@ namespace OpenCL
 
 			R32F		= R | Float,
 			RGBA32F		= RGBA | Float,
+			// --------------------------------------------
 
 			COUNT
 		};

@@ -12,6 +12,7 @@
 #include "Engine/VolumeTexture.h"
 
 #include "RHICommandList.h"
+#include "Render/UTextureUtils.h"
 
 namespace OpenCL
 {
@@ -297,6 +298,12 @@ namespace OpenCL
 			return false;
 
 
+		// Create temporary Texture2D
+		TObjectPtr<UTexture2D> texture = CreateUTexture2D(queueOverride, genMips);
+
+
+		// Blit Texture2D to RenderTarget2D
+		UTextureUtils::CopyTextureToRenderTarget(texture, output);
 
 		return false;
 	}

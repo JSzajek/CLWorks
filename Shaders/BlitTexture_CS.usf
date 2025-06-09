@@ -1,0 +1,14 @@
+#include "/Engine/Private/Common.ush"
+
+Texture2D<float4> Input;
+SamplerState Sampler;
+
+RWTexture2D<float4> Output;
+
+[numthreads(8, 8, 1)]
+void MainCS(uint3 DispatchThreadID : SV_DispatchThreadID)
+{
+    //float2 uv = float2(DispatchThreadID.xy) / float2(Output.GetDimensions());
+    //float4 color = Input.Sample(Sampler, uv);
+    //Output[DispatchThreadID.xy] = color;
+}

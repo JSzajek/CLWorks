@@ -398,10 +398,17 @@ UTexture2DArray* UCLWorksLibrary::ImageToTexture2DArray(UCLImageObject* image,
 	return image->mpImage->CreateUTexture2DArray(commandQueue, generateMipMaps);
 }
 
-bool UCLWorksLibrary::ImageToRenderTarget2D(UTextureRenderTarget2D* output,
+bool UCLWorksLibrary::WriteToRenderTarget2D(UTextureRenderTarget2D* output,
 											UCLImageObject* image, 
 											UCLCommandQueueObject* queueOverride)
 {
-	
-	return false;
+	if (image->GetData() == nullptr)
+	{
+		UE_LOG(LogCLWorksBlueprint, Warning, TEXT("Invalid Image!"));
+		return false;
+	}
+
+	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
+
+	return image->mpImage->UploadToUTextureRenderTarget2D(output, commandQueue);
 }

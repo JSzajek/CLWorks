@@ -2,10 +2,14 @@
 
 #include "CLWorks.h"
 
+#include "Interfaces/IPluginManager.h"
+
 #define LOCTEXT_NAMESPACE "FCLWorksModule"
 
 void FCLWorksModule::StartupModule()
 {
+	FString PluginShaderDir = FPaths::Combine(IPluginManager::Get().FindPlugin(TEXT("CLWorks"))->GetBaseDir(), TEXT("/Shaders"));
+	AddShaderSourceDirectoryMapping(TEXT("/CLShaders"), PluginShaderDir);
 }
 
 void FCLWorksModule::ShutdownModule()
