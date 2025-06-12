@@ -16,31 +16,6 @@
 
 namespace OpenCL
 {
-	namespace Utils
-	{
-		EPixelFormat FormatToPixelFormat(Image::Format format)
-		{
-			EPixelFormat pixelFormat = PF_Unknown;
-			switch (format)
-			{
-			case Image::Format::R8:
-				return PF_R8;
-			case Image::Format::RGBA8:
-				return PF_R8G8B8A8;
-			case Image::Format::R16F:
-				return PF_R16F;
-			case Image::Format::RGBA16F:
-				return PF_FloatRGBA;
-			case Image::Format::R32F:
-				return PF_R32_FLOAT;
-			case Image::Format::RGBA32F:
-				return PF_A32B32G32R32F;
-			default:
-				return PF_Unknown;
-			}
-		}
-	}
-
 	Image::Image()
 		: mpContext(nullptr),
 		mpDevice(nullptr),
@@ -67,7 +42,12 @@ namespace OpenCL
 		mDepthOrLayer(depthOrLayer)
 	{
 		if (device.AreImagesSupported())
+		{
+			if ((format & Format::HalfFloat) > 0 && !device.IsExtensionSupported("cl_khr_fp16"))
+				return;
+
 			mpImage = CreateCLImage();
+		}
 	}
 
 	Image::Image(cl_context context, 
@@ -100,6 +80,10 @@ namespace OpenCL
 	{
 		if ((mFormat & Format::R) > 0)
 			return 1;
+		else if ((mFormat & Format::RG) > 0)
+			return 2;
+		else if ((mFormat & Format::RGB) > 0)
+			return 3;
 		else if ((mFormat & Format::RGBA) > 0)
 			return 4;
 		return 0;
@@ -109,6 +93,10 @@ namespace OpenCL
 	{
 		if ((mFormat & Format::UChar) > 0)
 			return sizeof(uint8_t);
+		else if ((mFormat & Format::UInt) > 0)
+			return sizeof(uint32_t);
+		else if ((mFormat & Format::SInt) > 0)
+			return sizeof(int32_t);
 		else if ((mFormat & Format::HalfFloat) > 0)
 			return sizeof(FFloat16);
 		else if ((mFormat & Format::Float) > 0)
@@ -269,7 +257,8 @@ namespace OpenCL
 
 	bool Image::UploadToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> output, 
 											   cl_command_queue queueOverride, 
-											   bool genMips)
+											   bool genMips,
+											   const std::function<void()>& onUploadComplete)
 	{
 		if (mType != Type::Texture2D)
 		{
@@ -303,9 +292,9 @@ namespace OpenCL
 
 
 		// Blit Texture2D to RenderTarget2D
-		UTextureUtils::BlitTextureToRenderTarget(texture, output);
+		UTextureUtils::BlitTextureToRenderTarget(texture, output, FIntPoint::ZeroValue, onUploadComplete);
 
-		return false;
+		return true;
 	}
 
 	bool Image::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
@@ -393,6 +382,14 @@ namespace OpenCL
 		{
 			format.image_channel_data_type = CL_UNORM_INT8;
 		}
+		else if ((mFormat & Format::UInt) > 0)
+		{
+			format.image_channel_data_type = CL_UNSIGNED_INT32;
+		}
+		else if ((mFormat & Format::SInt) > 0)
+		{
+			format.image_channel_data_type = CL_SIGNED_INT32;
+		}
 		else if ((mFormat & Format::HalfFloat) > 0)
 		{
 			format.image_channel_data_type = CL_HALF_FLOAT;
@@ -410,6 +407,14 @@ namespace OpenCL
 		if ((mFormat & Format::R) > 0)
 		{
 			format.image_channel_order = CL_R;
+		}
+		else if ((mFormat & Format::RG) > 0)
+		{
+			format.image_channel_order = CL_RG;
+		}
+		else if ((mFormat & Format::RGB) > 0)
+		{
+			format.image_channel_order = CL_RGB;
 		}
 		else if ((mFormat & Format::RGBA) > 0)
 		{
@@ -464,6 +469,14 @@ namespace OpenCL
 			if ((mFormat & Format::UChar) > 0)
 			{
 				data = new uint8_t[pixelCount * channelCount * mDepthOrLayer];
+			}
+			else if ((mFormat & Format::UInt) > 0)
+			{
+				data = new uint32_t[pixelCount * channelCount * mDepthOrLayer];
+			}
+			else if ((mFormat & Format::SInt) > 0)
+			{
+				data = new int32_t[pixelCount * channelCount * mDepthOrLayer];
 			}
 			else if ((mFormat & Format::HalfFloat) > 0)
 			{
@@ -531,11 +544,15 @@ namespace OpenCL
 		const uint8_t channelCount = GetChannelCount();
 
 		if ((mFormat & Format::UChar) > 0)
-			MipGenerator::GenerateMipsInt8(output, (uint8_t*)src, mWidth, mHeight, mDepthOrLayer, channelCount);
+			MipGenerator::GenerateMipsInt8(output, static_cast<uint8_t*>(src), mWidth, mHeight, mDepthOrLayer, channelCount);
+		else if ((mFormat & Format::UInt) > 0)
+			MipGenerator::GenerateMipsUInt32(output, static_cast<uint32_t*>(src), mWidth, mHeight, mDepthOrLayer, channelCount);
+		else if ((mFormat & Format::SInt) > 0)
+			MipGenerator::GenerateMipsInt32(output, static_cast<int32_t*>(src), mWidth, mHeight, mDepthOrLayer, channelCount);
 		else if ((mFormat & Format::HalfFloat) > 0)
-			MipGenerator::GenerateMipsFloat16(output, (FFloat16*)src, mWidth, mHeight, mDepthOrLayer, channelCount);
+			MipGenerator::GenerateMipsFloat16(output, static_cast<FFloat16*>(src), mWidth, mHeight, mDepthOrLayer, channelCount);
 		else if ((mFormat & Format::Float) > 0)
-			MipGenerator::GenerateMipsFloat(output, (float*)src, mWidth, mHeight, mDepthOrLayer, channelCount);
+			MipGenerator::GenerateMipsFloat(output, static_cast<float*>(src), mWidth, mHeight, mDepthOrLayer, channelCount);
 		else
 			return false;
 		return true;
@@ -716,18 +733,6 @@ namespace OpenCL
 												}
 										  });
 		}
-	}
-
-	void Image::WriteToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> texture, 
-											  void* src)
-	{
-		
-	}
-
-	void Image::WriteToUTextureRenderTarget2D_Async(TObjectPtr<UTextureRenderTarget2D> texture, 
-													void* src)
-	{
-
 	}
 
 	void Image::WriteToUTexture2DArray(TObjectPtr<UTexture2DArray> texture,

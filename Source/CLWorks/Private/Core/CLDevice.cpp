@@ -96,7 +96,6 @@ namespace OpenCL
 		if (!strstr(extensions, extension.c_str()))
 		{
 			std::string extenstionsionStr = extension;
-			UE_LOG(LogCLWorks, Warning, TEXT("Extension Not Supported: %s"), *FString(extenstionsionStr.c_str()));
 			return false;
 		}
 		return true;

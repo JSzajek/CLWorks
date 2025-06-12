@@ -4,6 +4,13 @@
 
 #include "CLWorksLib.h"
 
+#include "Engine/Texture2D.h"
+#include "Engine/TextureRenderTarget2D.h"
+#include "Engine/Texture2DArray.h"
+
+#include "Private/UnitTests/TestUWorld.h"
+#include "Kismet/KismetRenderingLibrary.h"
+
 // Reference: https://minifloppy.it/posts/2024/automated-testing-specs-ue5/#writing-tests
 
 BEGIN_DEFINE_SPEC(FCLUnitTestsSpecs, "CLWorks Unit Test",
@@ -14,7 +21,13 @@ BEGIN_DEFINE_SPEC(FCLUnitTestsSpecs, "CLWorks Unit Test",
 // Variables and functions defined here will end up being member of 
 // the FCLUnitTestsSpecs class and will be accessible in the tests
 
+TUniquePtr<FTestUWorld> TestWorld = nullptr;
+
 OpenCL::Device mDefaultDevice;
+
+int32 mDefaultUTextureWidth = 256;
+int32 mDefaultUTextureHeight = 256;
+int32 mDefaultUTextureArraySlices = 4;
 
 FString ModuleDirectory = IPluginManager::Get().FindPlugin("CLWorks")->GetBaseDir();
 
@@ -425,6 +438,246 @@ void FCLUnitTestsSpecs::Define()
 			TestNotNull(TEXT("Failed Texture2D Creation!"), texture.Get());
 
 			texture->ConditionalBeginDestroy();
+		});
+	});
+
+	Describe("UE Textures", [this]()
+	{
+		BeforeEach([this]()
+		{
+			// Create the world
+			TestWorld = MakeUnique<FTestUWorld>();
+
+			TestNotNull("World", TestWorld->GetWorld());
+		});
+
+		AfterEach([this]()
+		{
+			TestWorld.Reset();
+		});
+
+		It("(1) UTexture Creation", [this]()
+		{
+			OpenCL::Context context(mDefaultDevice);
+
+			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mDefaultDevice);
+
+			const auto UTextureCreationTest = [&](OpenCL::Image::Format format)
+			{
+				OpenCL::Image cltexture(context,
+										mDefaultDevice,
+										mDefaultUTextureWidth,
+										mDefaultUTextureHeight,
+										1,
+										format,
+										OpenCL::Image::Type::Texture2D);
+
+				const std::string failedCLMsg = "Failed OpenCL Texture2D Creation! " + std::to_string(format);
+				if (!TestNotNull(FString(failedCLMsg.c_str()), cltexture.Get()))
+					return;
+
+				UTexture2D* utexture = cltexture.CreateUTexture2D(queue, true);
+
+				const std::string failedUEMsg = "Failed UTexture2D Creation! " + std::to_string(format);
+				if (TestNotNull(FString(failedUEMsg.c_str()), utexture))
+					utexture->ConditionalBeginDestroy();
+			};
+
+			// Test UTexture2D Formats --------------------
+			
+			UTextureCreationTest(OpenCL::Image::Format::R8);
+			UTextureCreationTest(OpenCL::Image::Format::RG8);
+			UTextureCreationTest(OpenCL::Image::Format::RGBA8);
+
+			UTextureCreationTest(OpenCL::Image::Format::R32U);
+			UTextureCreationTest(OpenCL::Image::Format::RG32U);
+			UTextureCreationTest(OpenCL::Image::Format::RGBA32U);
+
+			UTextureCreationTest(OpenCL::Image::Format::R32S);
+
+			UTextureCreationTest(OpenCL::Image::Format::R16F);
+			UTextureCreationTest(OpenCL::Image::Format::RG16F);
+			UTextureCreationTest(OpenCL::Image::Format::RGBA16F);
+
+			UTextureCreationTest(OpenCL::Image::Format::R32F);
+			UTextureCreationTest(OpenCL::Image::Format::RG32F);
+			UTextureCreationTest(OpenCL::Image::Format::RGBA32F);
+
+			// --------------------------------------------
+
+		});
+
+		It("(2) UTexture2DArray Creation", [this]()
+		{
+			OpenCL::Context context(mDefaultDevice);
+
+			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mDefaultDevice);
+
+			const auto UTexture2DArrayCreationTest = [&](OpenCL::Image::Format format)
+			{
+				OpenCL::Image cltexture(context,
+										mDefaultDevice,
+										mDefaultUTextureWidth,
+										mDefaultUTextureHeight,
+										mDefaultUTextureArraySlices,
+										format,
+										OpenCL::Image::Type::Texture2DArray);
+
+				const std::string failedCLMsg = "Failed OpenCL Texture2DArray Creation! " + std::to_string(format);
+				if (!TestNotNull(FString(failedCLMsg.c_str()), cltexture.Get()))
+					return;
+
+				UTexture2DArray* utexture = cltexture.CreateUTexture2DArray(queue, true);
+
+				const std::string failedUEMsg = "Failed UTexture2DArray Creation! " + std::to_string(format);
+				if (TestNotNull(FString(failedUEMsg.c_str()), utexture))
+					utexture->ConditionalBeginDestroy();
+			};
+
+
+			// Test UTexture2DArray Formats ---------------
+
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::R8);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG8);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA8);
+
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::R32U);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG32U);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA32U);
+
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::R32S);
+
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::R16F);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG16F);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA16F);
+
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::R32F);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG32F);
+			UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA32F);
+
+			// --------------------------------------------
+
+		});
+
+		It("(3) UTexture2D Read/Writes", [this]()
+		{
+		});
+
+		LatentIt("(4) UTextureRenderTarget2D Read/Writes", EAsyncExecution::ThreadPool, TestTimeout_S, [this](const FDoneDelegate& Done)
+		{
+			UTextureRenderTarget2D* rt = nullptr;
+			FGraphEventRef loadRT = FFunctionGraphTask::CreateAndDispatchWhenReady
+			([Done, this]()
+			{
+				OpenCL::Context context(mDefaultDevice);
+
+				OpenCL::Program program(context, mDefaultDevice);
+				OpenCL::CommandQueue queue(context, mDefaultDevice);
+
+				OpenCL::Image::Format testFormats[] = 
+				{
+					OpenCL::Image::Format::RGBA8,
+					OpenCL::Image::Format::RGBA16F
+				};
+
+				for (OpenCL::Image::Format format : testFormats)
+				{
+					if (format == OpenCL::Image::RGBA16F)
+					{
+						// Check for device support - skip otherwise...
+						if (!mDefaultDevice.IsExtensionSupported("cl_khr_fp16"))
+							continue;
+					}
+
+					OpenCL::Image cltexture(context,
+											mDefaultDevice,
+											mDefaultUTextureWidth,
+											mDefaultUTextureHeight,
+											1,
+											format,
+											OpenCL::Image::Type::Texture2D);
+
+					const std::string failedCLMsg = "Failed OpenCL Texture2D Creation! " + std::to_string(format);
+					if (!TestNotNull(FString(failedCLMsg.c_str()), cltexture.Get()))
+					{
+						Done.Execute();
+						return;
+					}
+
+				
+					if (format == OpenCL::Image::Format::RGBA16F)
+					{
+						program.ReadFromString("#pragma OPENCL EXTENSION cl_khr_fp16 : enable\n"
+											   "__kernel void write_color_img(read_write image2d_t output)\n" 
+											   "{ const int2 coord = (int2)(get_global_id(0), get_global_id(1)); \n"
+											   "  const half4 color = (half4)(0.5f, 0.5f, 0.5f, 1.0f); \n"
+											   "  write_imageh(output, coord, color); }");
+					}
+					else
+					{
+						program.ReadFromString("__kernel void write_color_img(read_write image2d_t output)\n" 
+											   "{ const int2 coord = (int2)(get_global_id(0), get_global_id(1)); \n"
+											   "  const float4 color = (float4)(0.0f, 1.0f, 0.0f, 1.0f); \n"
+											   "  write_imagef(output, coord, color); }");
+					}
+
+					OpenCL::Kernel kernel(program, "write_color_img");
+
+					kernel.SetArgument(0, cltexture.Get());
+
+					size_t global_work_size[2] = { mDefaultUTextureWidth, mDefaultUTextureHeight };
+					queue.EnqueueRange(kernel, 2, global_work_size);
+
+					queue.WaitForFinish();
+
+					ETextureRenderTargetFormat pixFormat = ETextureRenderTargetFormat::RTF_R8;
+					if (format == OpenCL::Image::Format::RGBA8)
+						pixFormat = ETextureRenderTargetFormat::RTF_RGBA8;
+					else if (format == OpenCL::Image::Format::RGBA16F)
+						pixFormat = ETextureRenderTargetFormat::RTF_RGBA16f;
+
+					UTextureRenderTarget2D* rt = NewObject<UTextureRenderTarget2D>(GetTransientPackage(),
+																				   NAME_None,
+																				   RF_Transient);
+
+					rt->RenderTargetFormat = pixFormat;
+					rt->ClearColor = FLinearColor::Transparent;
+					rt->bAutoGenerateMips = false;
+					rt->bCanCreateUAV = true;
+					rt->InitAutoFormat(mDefaultUTextureWidth, mDefaultUTextureHeight);
+					rt->UpdateResourceImmediate(true);
+
+					rt->AddToRoot();
+				
+					if (!TestNotNull("Failed to Create UTextureRenderTarget2D", rt))
+					{
+						Done.Execute();
+						return;
+					}
+
+					
+					bool res = cltexture.UploadToUTextureRenderTarget2D(rt, queue, false, [rt, Done, this]()
+					{
+						TUniquePtr<FTestUWorld> tempWorld = MakeUnique<FTestUWorld>();
+
+						FColor rt_color = UKismetRenderingLibrary::ReadRenderTargetPixel(tempWorld->GetWorld(), rt, 0, 0);
+
+						TestTrue(TEXT("Incorrect Color In Render Target2D!"), rt_color == FColor::Green);
+
+						rt->RemoveFromRoot();
+						rt->ConditionalBeginDestroy();
+
+						tempWorld.Reset();
+
+						Done.Execute();
+					});
+
+					TestTrue(TEXT("Failed Upload Into Render Target2D!"), res);
+				}
+
+			}, TStatId(), nullptr, ENamedThreads::GameThread);
 		});
 	});
 

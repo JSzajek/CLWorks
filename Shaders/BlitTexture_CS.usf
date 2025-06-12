@@ -12,28 +12,33 @@ SamplerState Sampler;
 Texture2D<float> Input;
 RWTexture2D<float> Output;
 #elif CHANNEL_FORMAT == 1
+Texture2D<float2> Input;
+RWTexture2D<float2> Output;
+#elif CHANNEL_FORMAT == 2
 Texture2D<float4> Input;
 RWTexture2D<float4> Output;
-#elif CHANNEL_FORMAT == 2
+#elif CHANNEL_FORMAT == 3
+Texture2D<uint> Input;
+RWTexture2D<uint> Output;
+#elif CHANNEL_FORMAT == 4
+Texture2D<uint2> Input;
+RWTexture2D<uint2> Output;
+#elif CHANNEL_FORMAT == 5
+Texture2D<uint4> Input;
+RWTexture2D<uint4> Output;
+#elif CHANNEL_FORMAT == 6
 Texture2D<int> Input;
 RWTexture2D<int> Output;
-#elif CHANNEL_FORMAT == 3
-Texture2D<int4> Input;
-RWTexture2D<int4> Output;
 #endif
 
-[numthreads(8, 8, 1)]
+[numthreads(16, 16, 1)]
 void MainCS(uint3 DispatchThreadID : SV_DispatchThreadID)
 {
     float2 uv = float2(DispatchThreadID.xy) / float2(Resolution);
     
-#if CHANNEL_FORMAT == 0
+#if CHANNEL_FORMAT < 3
     Output[DispatchThreadID.xy] = Input.Sample(Sampler, uv);
-#elif CHANNEL_FORMAT == 1
-    Output[DispatchThreadID.xy] = Input.Sample(Sampler, uv);
-#elif CHANNEL_FORMAT == 2
-    Output[DispatchThreadID.xy] = Input[DispatchThreadID.xy];
-#elif CHANNEL_FORMAT == 3
+#elif CHANNEL_FORMAT >= 3
     Output[DispatchThreadID.xy] = Input[DispatchThreadID.xy];
 #endif
 }

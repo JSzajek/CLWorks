@@ -7,12 +7,17 @@
 class FBlitTextureShadersCS : public FGlobalShader
 {
 public:
-	enum class EChannelFormat : uint8
+	enum class ECopyChannelFormat : uint8
 	{
 		Float,
+		Float2,
 		Float4,
-		Int,
-		Int4,
+
+		UInt,
+		UInt2,
+		UInt4,
+
+		SInt,
 
 		MAX
 	};
@@ -21,7 +26,7 @@ public:
 	
 	SHADER_USE_PARAMETER_STRUCT(FBlitTextureShadersCS, FGlobalShader);
 
-	class FChannelFormatPermutation : SHADER_PERMUTATION_ENUM_CLASS("CHANNEL_FORMAT", EChannelFormat);
+	class FChannelFormatPermutation : SHADER_PERMUTATION_ENUM_CLASS("CHANNEL_FORMAT", ECopyChannelFormat);
 	using FPermutationDomain = TShaderPermutationDomain<FChannelFormatPermutation>;
 
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters, )

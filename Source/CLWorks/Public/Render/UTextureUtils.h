@@ -7,5 +7,6 @@ namespace UTextureUtils
 {
 	static bool BlitTextureToRenderTarget(const TObjectPtr<UTexture2D> source,
 										  TObjectPtr<UTextureRenderTarget2D>& output,
-										  FIntPoint subRect = FIntPoint::ZeroValue);
+										  FIntPoint subRect = FIntPoint::ZeroValue,
+										  const std::function<void()>& onWriteComplete = nullptr);
 };
