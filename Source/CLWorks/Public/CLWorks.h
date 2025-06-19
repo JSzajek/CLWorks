@@ -4,6 +4,8 @@
 
 #include "Modules/ModuleManager.h"
 
+class FCLProfilerManager;
+
 class FCLWorksModule : public IModuleInterface
 {
 public:
@@ -11,4 +13,6 @@ public:
 	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+private:
+	TUniquePtr<FCLProfilerManager> mpCLProfileManager;
 };

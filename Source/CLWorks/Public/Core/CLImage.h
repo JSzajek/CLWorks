@@ -13,9 +13,11 @@ class UVolumeTexture;
 
 namespace OpenCL
 {
+	class CommandQueue;
+
 	class CLWORKS_API Image
 	{
-		friend class CommandQueue;
+		friend CommandQueue;
 	public:
 		enum class Type : uint8_t
 		{

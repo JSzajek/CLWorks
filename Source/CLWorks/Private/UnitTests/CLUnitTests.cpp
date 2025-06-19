@@ -18,7 +18,7 @@ BEGIN_DEFINE_SPEC(FCLUnitTestsSpecs, "CLWorks Unit Test",
 				  EAutomationTestFlags::CommandletContext |
 				  EAutomationTestFlags::ProductFilter);
 
-// Variables and functions defined here will end up being member of 
+// Variables and functions defined here will end up being member of
 // the FCLUnitTestsSpecs class and will be accessible in the tests
 
 TUniquePtr<FTestUWorld> TestWorld = nullptr;
@@ -443,19 +443,6 @@ void FCLUnitTestsSpecs::Define()
 
 	Describe("UE Textures", [this]()
 	{
-		BeforeEach([this]()
-		{
-			// Create the world
-			TestWorld = MakeUnique<FTestUWorld>();
-
-			TestNotNull("World", TestWorld->GetWorld());
-		});
-
-		AfterEach([this]()
-		{
-			TestWorld.Reset();
-		});
-
 		It("(1) UTexture Creation", [this]()
 		{
 			OpenCL::Context context(mDefaultDevice);
@@ -484,6 +471,7 @@ void FCLUnitTestsSpecs::Define()
 					utexture->ConditionalBeginDestroy();
 			};
 
+
 			// Test UTexture2D Formats --------------------
 			
 			UTextureCreationTest(OpenCL::Image::Format::R8);
@@ -505,7 +493,6 @@ void FCLUnitTestsSpecs::Define()
 			UTextureCreationTest(OpenCL::Image::Format::RGBA32F);
 
 			// --------------------------------------------
-
 		});
 
 		It("(2) UTexture2DArray Creation", [this]()

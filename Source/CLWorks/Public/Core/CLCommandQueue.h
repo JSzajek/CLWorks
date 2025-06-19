@@ -26,6 +26,7 @@ namespace OpenCL
 		operator cl_command_queue() const { return mpCommandQueue; };
 	public:
 		cl_command_queue Get() const { return mpCommandQueue; };
+		cl_device_id GetDevice() const { return mpAttachedDevice; };
 
 		bool IsValid() const { return mIsValid; }
 
@@ -52,6 +53,7 @@ namespace OpenCL
 						cl_device_id device);
 	private:
 		cl_command_queue mpCommandQueue;
+		cl_device_id mpAttachedDevice;
 		bool mIsValid;
 	};
 }

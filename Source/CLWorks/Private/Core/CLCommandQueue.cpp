@@ -1,5 +1,7 @@
 #include "Core/CLCommandQueue.h"
 
+#include "Profiler/CLProfilerManager.h"
+
 #include "CLWorksLog.h"
 
 namespace OpenCL
@@ -46,6 +48,7 @@ namespace OpenCL
 									const size_t* global_work_size,
 									const size_t* local_work_size)
 	{
+		cl_event event;
 		int32_t err = clEnqueueNDRangeKernel(mpCommandQueue,
 											 kernel.Get(),
 											 work_dim,
@@ -54,7 +57,9 @@ namespace OpenCL
 											 local_work_size,
 											 0,
 											 NULL,
-											 NULL);
+											 &event);
+
+		FCLProfilerManager::EnqueueProfiledKernel(*this, kernel, event, work_dim, global_work_size, local_work_size);
 
 		if (err < 0)
 		{
@@ -105,9 +110,23 @@ namespace OpenCL
 	void CommandQueue::Initialize(cl_context context,
 								  cl_device_id device)
 	{
+		mpAttachedDevice = device;
+
 	#ifdef CL_VERSION_2_0
+
+	#if WITH_EDITOR
+		cl_command_queue_properties props[3] =
+		{
+			CL_QUEUE_PROPERTIES,
+			CL_QUEUE_PROFILING_ENABLE,
+			0
+		};
+	#else
+		cl_command_queue_properties* props = nullptr;
+	#endif
+
 		int32_t err = 0;
-		mpCommandQueue = clCreateCommandQueueWithProperties(context, device, NULL, &err);
+		mpCommandQueue = clCreateCommandQueueWithProperties(context, device, props, &err);
 		if (err < 0)
 		{
 			UE_LOG(LogCLWorks, Error, TEXT("Failed Command Queue Creation: %d"), err);

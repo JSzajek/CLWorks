@@ -37,6 +37,7 @@ namespace OpenCL
 		void Initialize(cl_program program, 
 						const std::string& kernalName);
 	private:
+		std::string mName;
 		cl_kernel mpKernel;
 		bool mIsValid;
 	};

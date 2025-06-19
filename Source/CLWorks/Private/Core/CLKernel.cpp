@@ -12,14 +12,16 @@ namespace OpenCL
 
 	Kernel::Kernel(const Program& program, 
 				   const std::string& kernalName)
-		: mIsValid(true)
+		: mName(kernalName),
+		mIsValid(true)
 	{
 		Initialize(program.Get(), kernalName);
 	}
 
 	Kernel::Kernel(cl_program program, 
 				   const std::string& kernalName)
-		: mIsValid(true)
+		: mName(kernalName), 
+		mIsValid(true)
 	{
 		Initialize(program, kernalName);
 	}
