@@ -40,10 +40,9 @@ private:
 	{
 	public:
 		ProgramData() = default;
-		~ProgramData();
 	public:
-		OpenCL::Device* mpDevice = nullptr;
-		OpenCL::Context* mpContext = nullptr;
+		std::shared_ptr<OpenCL::Device> mpDevice = nullptr;
+		std::shared_ptr<OpenCL::Context> mpContext = nullptr;
 	};
 	TSharedPtr<ProgramData> mpProgramData;
 };

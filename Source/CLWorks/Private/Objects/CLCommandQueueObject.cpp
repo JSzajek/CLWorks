@@ -2,7 +2,7 @@
 
 void UCLCommandQueueObject::Initialize(const TObjectPtr<UCLContextObject>& context)
 {
-	mpQueue = std::make_unique<OpenCL::CommandQueue>(context->GetContext(), context->GetDevice());
+	mpQueue = std::make_shared<OpenCL::CommandQueue>(context->GetContext(), context->GetDevice());
 }
 
 bool UCLCommandQueueObject::IsValid() const

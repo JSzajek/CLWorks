@@ -14,11 +14,8 @@ namespace OpenCL
 	public:
 		Program();
 
-		Program(const OpenCL::Context& context,
-				const OpenCL::Device& device);
-
-		Program(cl_context context,
-				cl_device_id device);
+		Program(const std::shared_ptr<Context>& context,
+				const std::shared_ptr<Device>& device);
 
 		~Program();
 	public:
@@ -36,8 +33,9 @@ namespace OpenCL
                                 std::unordered_set<std::string>& includedFiles,
 								std::string* errMsg);
 	private:
-		cl_context mpContext;
-		cl_device_id mpDeviceId;
 		cl_program mpProgram;
+
+		std::weak_ptr<Context> mpContext;
+		std::weak_ptr<Device> mpDevice;
 	};
 }

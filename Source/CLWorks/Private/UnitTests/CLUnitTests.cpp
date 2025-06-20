@@ -23,7 +23,7 @@ BEGIN_DEFINE_SPEC(FCLUnitTestsSpecs, "CLWorks Unit Test",
 
 TUniquePtr<FTestUWorld> TestWorld = nullptr;
 
-OpenCL::Device mDefaultDevice;
+OpenCL::DevicePtr mpDefaultDevice = OpenCL::MakeDevice();
 
 int32 mDefaultUTextureWidth = 256;
 int32 mDefaultUTextureHeight = 256;
@@ -49,20 +49,20 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) Context Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			if (!TestTrue(TEXT("Failed Context Creation!"), context.Get() != nullptr))
+			if (!TestTrue(TEXT("Failed Context Creation!"), context->Get() != nullptr))
 				return;
 		});
 
 		It("(3) Command Queue Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			if (!TestTrue(TEXT("Failed Context Creation!"), context.Get() != nullptr))
+			if (!TestTrue(TEXT("Failed Context Creation!"), context->Get() != nullptr))
 				return;
 
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 			TestTrue(TEXT("Failed Command Queue Creation!"), queue.Get() != nullptr);
 		});
 	});
@@ -71,10 +71,10 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) Kernel Compilation - String", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void test() { }");
 
 			TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr);
@@ -82,10 +82,10 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) Kernel Compilation - File", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromFile(moduleDirStr + "/UnitTest/Shaders/add_vectors.cl");
 
 			TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr);
@@ -93,9 +93,9 @@ void FCLUnitTestsSpecs::Define()
 		
 		It("(3) Kernel Failure", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void test() { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -110,9 +110,9 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(4) Argument Setting", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void test(float a, float b) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -135,9 +135,9 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(5) Invalid Argument", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void test(float a) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -159,7 +159,7 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) Buffer Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			size_t count = 10;
 			std::vector<float> test_input(count, 0.0f);
@@ -181,7 +181,7 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) Buffer Read", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			size_t count = 5;
 			std::vector<float> input_data = { 30, 2, 45, 19, 54 };
@@ -192,7 +192,7 @@ void FCLUnitTestsSpecs::Define()
 
 			std::vector<float> target_output(count, 0.0f);
 
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 			queue.ReadBuffer(buffer_input, count * sizeof(float), target_output.data());
 
 			for (size_t i = 0; i < count; ++i)
@@ -205,9 +205,9 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(3) Buffer Write", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void double_data(__global float* data)\n" 
 								   "{ int i = get_global_id(0); \n"
 								   "data[i] = data[i] * 2; }");
@@ -224,7 +224,7 @@ void FCLUnitTestsSpecs::Define()
 				return;
 
 			OpenCL::Kernel kernel(program, "double_data");
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			kernel.SetArgument<cl_mem>(0, buffer_input);
 
@@ -251,9 +251,9 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) Enqueue", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void test(__global float* data) { }");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -267,7 +267,7 @@ void FCLUnitTestsSpecs::Define()
 				return;
 
 			OpenCL::Kernel kernel(program, "test");
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			kernel.SetArgument<cl_mem>(0, buffer_input);
 			if (!TestTrue(TEXT("Couldn't Set Kernel Arguments!"), kernel.IsValid()))
@@ -279,9 +279,9 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) Work Sizes", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromString("__kernel void triple_data(__global const float* data, __global float* result)\n" 
 								   "{ int i = get_global_id(0); \n"
 								   "result[i] = data[i] * 3; }");
@@ -298,7 +298,7 @@ void FCLUnitTestsSpecs::Define()
 				return;
 
 			OpenCL::Kernel kernel(program, "triple_data");
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			kernel.SetArgument<cl_mem>(0, buffer_input);
 			kernel.SetArgument<cl_mem>(1, buffer_output);
@@ -360,10 +360,10 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) Texture2D Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			OpenCL::Image cltexture(context,
-								    mDefaultDevice,
+								    mpDefaultDevice,
 								    256, 
 								    256, 
 								    1,		
@@ -375,11 +375,11 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) Texture2D Read Write", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
-			OpenCL::Program program(context, mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
 
 			OpenCL::Image cltexture(context,
-									  mDefaultDevice,
+									  mpDefaultDevice,
 									  256, 
 									  256, 
 									  1,		
@@ -392,7 +392,7 @@ void FCLUnitTestsSpecs::Define()
 								   "  write_imagef(output, coord, (float4)(1.0f, 0.0f, 0.0f, 1.0f)); }");
 
 			OpenCL::Kernel kernel(program, "write_red_img");
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			kernel.SetArgument(0, cltexture.Get());
 			
@@ -419,10 +419,10 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(3) Texture2D UE", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			OpenCL::Image cltexture(context,
-									  mDefaultDevice,
+									  mpDefaultDevice,
 									  256, 
 									  256, 
 									  1,		
@@ -445,15 +445,15 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) UTexture Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			const auto UTextureCreationTest = [&](OpenCL::Image::Format format)
 			{
 				OpenCL::Image cltexture(context,
-										mDefaultDevice,
+										mpDefaultDevice,
 										mDefaultUTextureWidth,
 										mDefaultUTextureHeight,
 										1,
@@ -484,9 +484,12 @@ void FCLUnitTestsSpecs::Define()
 
 			UTextureCreationTest(OpenCL::Image::Format::R32S);
 
-			UTextureCreationTest(OpenCL::Image::Format::R16F);
-			UTextureCreationTest(OpenCL::Image::Format::RG16F);
-			UTextureCreationTest(OpenCL::Image::Format::RGBA16F);
+			if (mpDefaultDevice->IsExtensionSupported("cl_khr_fp16"))
+			{
+				UTextureCreationTest(OpenCL::Image::Format::R16F);
+				UTextureCreationTest(OpenCL::Image::Format::RG16F);
+				UTextureCreationTest(OpenCL::Image::Format::RGBA16F);
+			}
 
 			UTextureCreationTest(OpenCL::Image::Format::R32F);
 			UTextureCreationTest(OpenCL::Image::Format::RG32F);
@@ -497,15 +500,15 @@ void FCLUnitTestsSpecs::Define()
 
 		It("(2) UTexture2DArray Creation", [this]()
 		{
-			OpenCL::Context context(mDefaultDevice);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-			OpenCL::Program program(context, mDefaultDevice);
-			OpenCL::CommandQueue queue(context, mDefaultDevice);
+			OpenCL::Program program(context, mpDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			const auto UTexture2DArrayCreationTest = [&](OpenCL::Image::Format format)
 			{
 				OpenCL::Image cltexture(context,
-										mDefaultDevice,
+										mpDefaultDevice,
 										mDefaultUTextureWidth,
 										mDefaultUTextureHeight,
 										mDefaultUTextureArraySlices,
@@ -536,9 +539,12 @@ void FCLUnitTestsSpecs::Define()
 
 			UTexture2DArrayCreationTest(OpenCL::Image::Format::R32S);
 
-			UTexture2DArrayCreationTest(OpenCL::Image::Format::R16F);
-			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG16F);
-			UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA16F);
+			if (mpDefaultDevice->IsExtensionSupported("cl_khr_fp16"))
+			{
+				UTexture2DArrayCreationTest(OpenCL::Image::Format::R16F);
+				UTexture2DArrayCreationTest(OpenCL::Image::Format::RG16F);
+				UTexture2DArrayCreationTest(OpenCL::Image::Format::RGBA16F);
+			}
 
 			UTexture2DArrayCreationTest(OpenCL::Image::Format::R32F);
 			UTexture2DArrayCreationTest(OpenCL::Image::Format::RG32F);
@@ -558,10 +564,10 @@ void FCLUnitTestsSpecs::Define()
 			FGraphEventRef loadRT = FFunctionGraphTask::CreateAndDispatchWhenReady
 			([Done, this]()
 			{
-				OpenCL::Context context(mDefaultDevice);
+				OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
-				OpenCL::Program program(context, mDefaultDevice);
-				OpenCL::CommandQueue queue(context, mDefaultDevice);
+				OpenCL::Program program(context, mpDefaultDevice);
+				OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 				OpenCL::Image::Format testFormats[] = 
 				{
@@ -574,12 +580,12 @@ void FCLUnitTestsSpecs::Define()
 					if (format == OpenCL::Image::RGBA16F)
 					{
 						// Check for device support - skip otherwise...
-						if (!mDefaultDevice.IsExtensionSupported("cl_khr_fp16"))
+						if (!mpDefaultDevice->IsExtensionSupported("cl_khr_fp16"))
 							continue;
 					}
 
 					OpenCL::Image cltexture(context,
-											mDefaultDevice,
+											mpDefaultDevice,
 											mDefaultUTextureWidth,
 											mDefaultUTextureHeight,
 											1,
@@ -672,13 +678,10 @@ void FCLUnitTestsSpecs::Define()
 	{
 		It("(1) Vector Buffer Addition", [this]()
 		{
-			OpenCL::Device device;
-
-			OpenCL::ContextProperties contextProperties;
-			OpenCL::Context context(device, contextProperties);
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
 			const std::string moduleDirStr = std::string(TCHAR_TO_UTF8(*ModuleDirectory));
-			OpenCL::Program program(context, device);
+			OpenCL::Program program(context, mpDefaultDevice);
 			program.ReadFromFile(moduleDirStr + "/UnitTest/Shaders/add_vectors.cl");
 
 			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
@@ -686,7 +689,7 @@ void FCLUnitTestsSpecs::Define()
 
 			OpenCL::Kernel kernel(program, "vectors_add");
 
-			OpenCL::CommandQueue queue(context, device);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			const size_t numValues = 6;
 			const size_t local_size = 6;

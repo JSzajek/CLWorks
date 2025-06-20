@@ -8,25 +8,17 @@
 namespace OpenCL
 {
 	Program::Program()
-		: mpContext(nullptr),
-		mpDeviceId(nullptr),
-		mpProgram(nullptr)
+		: mpProgram(nullptr),
+		mpContext(),
+		mpDevice()
 	{
 	}
 
-	Program::Program(const Context& context,
-					 const Device& device)
-		: mpContext(context.Get()),
-		mpDeviceId(device.Get()),
-		mpProgram(nullptr)
-	{
-	}
-
-	Program::Program(cl_context context,
-					 cl_device_id device)
-		: mpContext(context),
-		mpDeviceId(device),
-		mpProgram(nullptr)
+	Program::Program(const std::shared_ptr<Context>& context,
+					 const std::shared_ptr<Device>& device)
+		: mpProgram(nullptr),
+		mpContext(context),
+		mpDevice(device)
 	{
 	}
 
@@ -68,6 +60,20 @@ namespace OpenCL
 	bool Program::SetupProgramFromString(const std::string& programString,
 										 std::string* errMsg)
 	{
+		const std::shared_ptr<Context> context_ptr = mpContext.lock();
+		if (!context_ptr)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Invalid Program Context!"));
+			return false;
+		}
+
+		const std::shared_ptr<Device> device_ptr = mpDevice.lock();
+		if (!device_ptr)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Invalid Program Device!"));
+			return false;
+		}
+
 		cl_program program;
 		char* program_buffer, * program_log;
 		size_t program_size, log_size;
@@ -79,7 +85,7 @@ namespace OpenCL
 		program_buffer[program_size] = '\0';
 		std::memcpy(program_buffer, programString.c_str(), program_size);
 
-		program = clCreateProgramWithSource(mpContext, 
+		program = clCreateProgramWithSource(context_ptr->Get(),
 											1,
 											(const char**)&program_buffer, 
 											&program_size,
@@ -100,7 +106,7 @@ namespace OpenCL
 		{
 			/* Find size of log and print to std output */
 			clGetProgramBuildInfo(program, 
-								  mpDeviceId, 
+								  device_ptr->Get(), 
 								  CL_PROGRAM_BUILD_LOG,
 								  0, 
 								  NULL, 
@@ -110,7 +116,7 @@ namespace OpenCL
 			program_log[log_size] = '\0';
 
 			clGetProgramBuildInfo(program, 
-								  mpDeviceId, 
+								  device_ptr->Get(), 
 								  CL_PROGRAM_BUILD_LOG,
 								  log_size + 1, 
 								  program_log, 

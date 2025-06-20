@@ -3,8 +3,8 @@
 void UCLContextObject::Initialize(uint32_t deviceIndex, 
 								  uint32_t platformIndex)
 {
-	mpDevice = std::move(std::make_unique<OpenCL::Device>(deviceIndex, platformIndex));
-	mpContext = std::move(std::make_unique<OpenCL::Context>(*mpDevice));
+	mpDevice = OpenCL::MakeDevice(deviceIndex, platformIndex);
+	mpContext = OpenCL::MakeContext(mpDevice);
 }
 
 bool UCLContextObject::IsValidDevice() const
@@ -28,16 +28,16 @@ bool UCLContextObject::HasImageSupport() const
 	return false;
 }
 
-cl_device_id UCLContextObject::GetDevice() const
+const std::shared_ptr<OpenCL::Device> UCLContextObject::GetDevice() const
 {
 	if (mpDevice)
-		return mpDevice->Get();
+		return mpDevice;
 	return nullptr;
 }
 
-cl_context UCLContextObject::GetContext() const
+const std::shared_ptr<OpenCL::Context> UCLContextObject::GetContext() const
 {
 	if (mpContext)
-		return mpContext->Get();
+		return mpContext;
 	return nullptr;
 }

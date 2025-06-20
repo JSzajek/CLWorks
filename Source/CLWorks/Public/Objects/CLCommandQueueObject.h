@@ -19,5 +19,5 @@ public:
 protected:
 	void Initialize(const TObjectPtr<UCLContextObject>& context);
 private:
-	std::unique_ptr<OpenCL::CommandQueue> mpQueue = nullptr;
+	std::shared_ptr<OpenCL::CommandQueue> mpQueue = nullptr;
 };

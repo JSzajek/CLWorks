@@ -50,7 +50,7 @@ void UCLImageObject::Initialize2D(const TObjectPtr<UCLContextObject>& context,
 	OpenCL::AccessType access = AccessToCLAccess(type);
 	OpenCL::Image::Format imgFormat = FormatToCLFormat(format);
 
-	mpImage = std::make_unique<OpenCL::Image>(context->GetContext(),
+	mpImage = std::make_shared<OpenCL::Image>(context->GetContext(),
 											  context->GetDevice(),
 											  Width, 
 											  Height,
@@ -75,7 +75,7 @@ void UCLImageObject::Initialize2DArray(const TObjectPtr<UCLContextObject>& conte
 	OpenCL::AccessType access = AccessToCLAccess(type);
 	OpenCL::Image::Format imgFormat = FormatToCLFormat(format);
 
-	mpImage = std::make_unique<OpenCL::Image>(context->GetContext(),
+	mpImage = std::make_shared<OpenCL::Image>(context->GetContext(),
 											  context->GetDevice(),
 											  Width, 
 											  Height,

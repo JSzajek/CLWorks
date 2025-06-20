@@ -23,5 +23,5 @@ protected:
 					int32 dataSize,
 					UCLAccessType type);
 private:
-	std::unique_ptr<OpenCL::Buffer> mpBuffer;
+	std::shared_ptr<OpenCL::Buffer> mpBuffer;
 };

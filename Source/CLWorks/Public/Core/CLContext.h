@@ -22,14 +22,12 @@ namespace OpenCL
 	public:
 		Context();
 
-		Context(const OpenCL::Device& device,
-				const ContextProperties& properties = {});
-
-		Context(cl_device_id device, 
+		Context(const DevicePtr& device,
 				const ContextProperties& properties = {});
 
 		~Context();
 	public:
+		operator cl_context() const { return mpContext; }
 		cl_context Get() const { return mpContext; };
 		
 		void PrintSupportedImageFormats(cl_mem_flags mem_flags);
@@ -39,4 +37,12 @@ namespace OpenCL
 	private:
 		cl_context mpContext = nullptr;
 	};
+
+	using ContextPtr = std::shared_ptr<OpenCL::Context>;
+
+	inline static ContextPtr MakeContext(const DevicePtr& device,
+										 const ContextProperties& properties = {})
+	{
+		return std::make_shared<OpenCL::Context>(device, properties);
+	}
 }

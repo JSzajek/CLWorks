@@ -17,23 +17,23 @@
 namespace OpenCL
 {
 	Image::Image()
-		: mpContext(nullptr),
-		mpDevice(nullptr),
-		mpImage(nullptr)
+		: mpImage(nullptr),
+		mpContext(),
+		mpDevice()
 	{
 	}
 
-	Image::Image(const OpenCL::Context& context, 
-				 const OpenCL::Device& device,
+	Image::Image(const std::shared_ptr<OpenCL::Context>& context, 
+				 const std::shared_ptr<OpenCL::Device>& device,
 				 uint32_t width,
 				 uint32_t height,
 				 uint32_t depthOrLayer,
 				 Format format,
 				 Type type,
 				 AccessType access)
-		: mpContext(context.Get()),
-		mpDevice(device.Get()),
-		mpImage(nullptr),
+		: mpImage(nullptr),
+		mpContext(context),
+		mpDevice(device),
 		mFormat(format),
 		mType(type),
 		mAccess(access),
@@ -41,34 +41,13 @@ namespace OpenCL
 		mHeight(height),
 		mDepthOrLayer(depthOrLayer)
 	{
-		if (device.AreImagesSupported())
+		if (device->AreImagesSupported())
 		{
-			if ((format & Format::HalfFloat) > 0 && !device.IsExtensionSupported("cl_khr_fp16"))
+			if ((format & Format::HalfFloat) > 0 && !device->IsExtensionSupported("cl_khr_fp16"))
 				return;
 
 			mpImage = CreateCLImage();
 		}
-	}
-
-	Image::Image(cl_context context, 
-				 cl_device_id device, 
-				 uint32_t width, 
-				 uint32_t height, 
-				 uint32_t depthOrLayer, 
-				 Format format, 
-				 Type type, 
-				 AccessType access)
-		: mpContext(context),
-		mpDevice(device),
-		mpImage(nullptr),
-		mFormat(format),
-		mType(type),
-		mAccess(access),
-		mWidth(width),
-		mHeight(height),
-		mDepthOrLayer(depthOrLayer)
-	{
-		mpImage = CreateCLImage();
 	}
 
 	size_t Image::GetPixelCount() const
@@ -348,6 +327,13 @@ namespace OpenCL
 
 	cl_mem Image::CreateCLImage()
 	{
+		const std::shared_ptr<Context> context_ptr = mpContext.lock();
+		if (!context_ptr)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Invalid Program Context!"));
+			return nullptr;
+		}
+
 		cl_image_desc desc = {};
 		desc.image_width = mWidth;
 		desc.image_height = mHeight;
@@ -444,7 +430,7 @@ namespace OpenCL
 		}
 
 		int32_t err = 0;
-		cl_mem img = clCreateImage(mpContext, access, &format, &desc, nullptr, &err);
+		cl_mem img = clCreateImage(context_ptr->Get(), access, &format, &desc, nullptr, &err);
 		if (err < 0)
 		{
 			UE_LOG(LogCLWorks, Error, TEXT("Failed CL Image Creation: %d"), err);
@@ -457,6 +443,20 @@ namespace OpenCL
 						   cl_command_queue overrideQueue,
 						   bool isBlocking) const
 	{
+		const std::shared_ptr<Context> context_ptr = mpContext.lock();
+		if (!context_ptr)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Invalid Program Context!"));
+			return false;
+		}
+
+		const std::shared_ptr<Device> device_ptr = mpDevice.lock();
+		if (!device_ptr)
+		{
+			UE_LOG(LogCLWorks, Warning, TEXT("Invalid Program Device!"));
+			return false;
+		}
+
 		const size_t origin[3] = { 0, 0, 0 };
 		const size_t region[3] = { mWidth, mHeight, mDepthOrLayer };
 
@@ -516,7 +516,7 @@ namespace OpenCL
 		}
 		else
 		{
-			OpenCL::CommandQueue queue(mpContext, mpDevice);
+			OpenCL::CommandQueue queue(context_ptr, device_ptr);
 			err = clEnqueueReadImage(queue.Get(),
 									 mpImage, 
 									 isBlocking ? CL_TRUE : CL_FALSE,

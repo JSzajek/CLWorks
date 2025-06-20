@@ -13,21 +13,15 @@ namespace OpenCL
 
 	}
 
-	CommandQueue::CommandQueue(const Context& context, 
-							   const Device& device)
-		: mIsValid(true)
+	CommandQueue::CommandQueue(const std::shared_ptr<OpenCL::Context>& context, 
+							   const std::shared_ptr<OpenCL::Device>& device)
+		: mpCommandQueue(nullptr),
+		mpContext(context),
+		mpAttachedDevice(device),
+		mIsValid(true)
 	{
-		Initialize(context.Get(), device.Get());
+		Initialize(context->Get(), device->Get());
 	}
-
-	CommandQueue::CommandQueue(cl_context context, 
-							   cl_device_id device)
-		: mIsValid(true)
-	{
-		Initialize(context, device);
-	}
-
-	
 
 	CommandQueue::~CommandQueue()
 	{
@@ -110,8 +104,6 @@ namespace OpenCL
 	void CommandQueue::Initialize(cl_context context,
 								  cl_device_id device)
 	{
-		mpAttachedDevice = device;
-
 	#ifdef CL_VERSION_2_0
 
 	#if WITH_EDITOR

@@ -1,5 +1,7 @@
 #include "Profiler/CLProfilerManager.h"
 
+#include "CLWorksLog.h"
+
 #include "Profiler/CLStats.h"
 
 FCLHardwareMetrics FCLProfilerManager::HardwareMetrics = {};
@@ -11,7 +13,7 @@ std::mutex mProfileMutex = {};
 
 FCLProfilerManager::FCLProfilerManager()
 {
-	// Profile hardware statistics
+	// Profile default hardware statistics
 	OpenCL::Device device;
 
 	clGetDeviceInfo(device.Get(), CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(HardwareMetrics.MaxComputeUnits), &HardwareMetrics.MaxComputeUnits, nullptr);
@@ -52,15 +54,21 @@ void FCLProfilerManager::EnqueueProfiledKernel(const OpenCL::CommandQueue& queue
 	const std::scoped_lock lock(mProfileMutex);
 
 	FKernelProfile Profile;
-	Profile.mName = "Kernel"; // Optional, could extract name via clGetKernelInfo
+	Profile.mName = kernel.GetName();
 	Profile.mEvent = event.Get();
-
 	
-	clGetKernelWorkGroupInfo(kernel.Get(), queue.GetDevice(), CL_KERNEL_WORK_GROUP_SIZE, sizeof(Profile.KernelWorkGroupSize), &Profile.KernelWorkGroupSize, nullptr);
-	clGetKernelWorkGroupInfo(kernel.Get(), queue.GetDevice(), CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(Profile.PreferredWorkGroupMultiple), &Profile.PreferredWorkGroupMultiple, nullptr);
-	clGetKernelWorkGroupInfo(kernel.Get(), queue.GetDevice(), CL_KERNEL_COMPILE_WORK_GROUP_SIZE, sizeof(Profile.CompiledWorkGroupSize), &Profile.CompiledWorkGroupSize, nullptr);
-	clGetKernelWorkGroupInfo(kernel.Get(), queue.GetDevice(), CL_KERNEL_PRIVATE_MEM_SIZE, sizeof(Profile.PrivateMemSize), &Profile.PrivateMemSize, nullptr);
-	clGetKernelWorkGroupInfo(kernel.Get(), queue.GetDevice(), CL_KERNEL_LOCAL_MEM_SIZE, sizeof(Profile.LocalMemSizeUsed), &Profile.LocalMemSizeUsed, nullptr);
+	OpenCL::DevicePtr device_ptr = queue.GetDevicePtr();
+	if (!device_ptr)
+	{
+		UE_LOG(LogCLWorks, Warning, TEXT("Failed To Enqueue Kernel: %s"), *FString(kernel.GetName().c_str()));
+		return;
+	}
+
+	clGetKernelWorkGroupInfo(kernel, *device_ptr, CL_KERNEL_WORK_GROUP_SIZE, sizeof(Profile.KernelWorkGroupSize), &Profile.KernelWorkGroupSize, nullptr);
+	clGetKernelWorkGroupInfo(kernel, *device_ptr, CL_KERNEL_PREFERRED_WORK_GROUP_SIZE_MULTIPLE, sizeof(Profile.PreferredWorkGroupMultiple), &Profile.PreferredWorkGroupMultiple, nullptr);
+	clGetKernelWorkGroupInfo(kernel, *device_ptr, CL_KERNEL_COMPILE_WORK_GROUP_SIZE, sizeof(Profile.CompiledWorkGroupSize), &Profile.CompiledWorkGroupSize, nullptr);
+	clGetKernelWorkGroupInfo(kernel, *device_ptr, CL_KERNEL_PRIVATE_MEM_SIZE, sizeof(Profile.PrivateMemSize), &Profile.PrivateMemSize, nullptr);
+	clGetKernelWorkGroupInfo(kernel, *device_ptr, CL_KERNEL_LOCAL_MEM_SIZE, sizeof(Profile.LocalMemSizeUsed), &Profile.LocalMemSizeUsed, nullptr);
 
 	ActiveKernels.Add(Profile);
 }
@@ -76,13 +84,8 @@ void FCLProfilerManager::PollEvents()
 
 		if (eventStatus == CL_COMPLETE)
 		{
-			cl_ulong Start;
-			cl_ulong End;
-			clGetEventProfilingInfo(ActiveKernels[i].mEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &Start, nullptr);
-			clGetEventProfilingInfo(ActiveKernels[i].mEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &End, nullptr);
-
-			ActiveKernels[i].mStartTimeNs = Start;
-			ActiveKernels[i].mEndTimeNs = End;
+			clGetEventProfilingInfo(ActiveKernels[i].mEvent, CL_PROFILING_COMMAND_START, sizeof(cl_ulong), &ActiveKernels[i].mStartTimeNs, nullptr);
+			clGetEventProfilingInfo(ActiveKernels[i].mEvent, CL_PROFILING_COMMAND_END, sizeof(cl_ulong), &ActiveKernels[i].mEndTimeNs, nullptr);
 
 			clReleaseEvent(ActiveKernels[i].mEvent);
 			CompletedKernels.Add(ActiveKernels[i]);
@@ -108,24 +111,13 @@ void FCLProfilerManager::UpdateStats()
 			TotalGroups += Profile.GetWorkGroupCount();
 		}
 
-		//float AvgTime = TotalTime_ms / CompletedKernels.Num();
-
 		SET_FLOAT_STAT(STAT_OpenCL_KernelTime, TotalTime_ms);
 
 		CompletedKernels.Empty();
-
-		//SET_FLOAT_STAT(STAT_OpenCL_AvgKernelTime, AvgTime);
-		//SET_DWORD_STAT(STAT_OpenCL_TotalWorkgroups, TotalGroups);
-		//
-		//SET_MEMORY_STAT(STAT_OpenCL_HardwareGlobalMemory, HardwareMetrics.GlobalMemSize);
-		//SET_MEMORY_STAT(STAT_OpenCL_HardwareLocalMemory, HardwareMetrics.LocalMemSize);
 	}
 	else
 	{
 		SET_FLOAT_STAT(STAT_OpenCL_KernelTime, 0.0f);
-
-		//SET_FLOAT_STAT(STAT_OpenCL_AvgKernelTime, 0.0f);
-		//SET_DWORD_STAT(STAT_OpenCL_TotalWorkgroups, 0);
 	}
 }
 

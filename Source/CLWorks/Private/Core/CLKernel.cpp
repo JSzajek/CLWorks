@@ -18,14 +18,6 @@ namespace OpenCL
 		Initialize(program.Get(), kernalName);
 	}
 
-	Kernel::Kernel(cl_program program, 
-				   const std::string& kernalName)
-		: mName(kernalName), 
-		mIsValid(true)
-	{
-		Initialize(program, kernalName);
-	}
-
 	Kernel::~Kernel()
 	{
 		if (mpKernel)

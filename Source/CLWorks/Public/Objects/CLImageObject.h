@@ -49,5 +49,5 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CLWorks")
 	TObjectPtr<UTexture> Texture = nullptr;
 private:
-	std::unique_ptr<OpenCL::Image> mpImage = nullptr;
+	std::shared_ptr<OpenCL::Image> mpImage = nullptr;
 };

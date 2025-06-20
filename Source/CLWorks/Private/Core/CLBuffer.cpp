@@ -9,22 +9,13 @@ namespace OpenCL
 	{
 	}
 
-	Buffer::Buffer(cl_context context, 
-				   void* dataPtr, 
-				   size_t dataSize, 
+	Buffer::Buffer(const std::shared_ptr<Context>& context, 
+				   void* dataPtr,
+				   size_t dataSize,
 				   AccessType type)
 		: mpBuffer(nullptr)
 	{
-		Initialize(context, dataPtr, dataSize, type);
-	}
-
-	Buffer::Buffer(const Context& context,
-				   void* dataPtr, 
-				   size_t dataSize, 
-				   AccessType type)
-		: mpBuffer(nullptr)
-	{
-		Initialize(context.Get(), dataPtr, dataSize, type);
+		Initialize(context->Get(), dataPtr, dataSize, type);
 	}
 
 	Buffer::~Buffer()

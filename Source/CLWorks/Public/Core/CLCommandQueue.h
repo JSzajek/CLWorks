@@ -15,19 +15,16 @@ namespace OpenCL
 	public:
 		CommandQueue();
 
-		CommandQueue(const OpenCL::Context& context, 
-					 const OpenCL::Device& device);
-
-		CommandQueue(cl_context context, 
-					 cl_device_id device);
+		CommandQueue(const std::shared_ptr<OpenCL::Context>& context, 
+					 const std::shared_ptr<OpenCL::Device>& device);
 
 		~CommandQueue();
 	public:
 		operator cl_command_queue() const { return mpCommandQueue; };
-	public:
 		cl_command_queue Get() const { return mpCommandQueue; };
-		cl_device_id GetDevice() const { return mpAttachedDevice; };
 
+		inline DevicePtr GetDevicePtr() const { return mpAttachedDevice.lock(); }
+	public:
 		bool IsValid() const { return mIsValid; }
 
 		void WaitForFinish() const;
@@ -53,7 +50,9 @@ namespace OpenCL
 						cl_device_id device);
 	private:
 		cl_command_queue mpCommandQueue;
-		cl_device_id mpAttachedDevice;
+
+		std::weak_ptr<OpenCL::Context> mpContext;
+		std::weak_ptr<OpenCL::Device> mpAttachedDevice;
 		bool mIsValid;
 	};
 }

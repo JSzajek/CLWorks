@@ -10,4 +10,13 @@ namespace OpenCL
 
 		COUNT
 	};
+
+	enum class MemoryStrategy : uint8_t 
+	{
+		COPY_ONCE,
+		STREAM,
+		ZERO_COPY,
+
+		COUNT
+	};
 }

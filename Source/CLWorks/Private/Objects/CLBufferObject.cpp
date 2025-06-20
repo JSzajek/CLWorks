@@ -19,5 +19,5 @@ void UCLBufferObject::Initialize(const TObjectPtr<UCLContextObject>& context,
 			break;
 	}
 
-	mpBuffer = std::make_unique<OpenCL::Buffer>(context->GetContext(), dataPtr, dataSize, access);
+	mpBuffer = std::make_shared<OpenCL::Buffer>(context->GetContext(), dataPtr, dataSize, access);
 }

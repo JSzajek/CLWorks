@@ -11,17 +11,17 @@ namespace OpenCL
 	public:
 		Kernel();
 
-		Kernel(const OpenCL::Program& program, 
-			   const std::string& kernalName);
-
-		Kernel(cl_program program, 
+		Kernel(const Program& program,
 			   const std::string& kernalName);
 
 		~Kernel();
 	public:
-		cl_kernel Get() const { return mpKernel; };
+		operator cl_kernel() const { return mpKernel; }
+		inline cl_kernel Get() const { return mpKernel; };
 
-		bool IsValid() const { return mIsValid; }
+		inline bool IsValid() const { return mIsValid; }
+
+		inline std::string GetName() const { return mName; }
 
 		template<typename T>
 		bool SetArgument(cl_uint arg_index,

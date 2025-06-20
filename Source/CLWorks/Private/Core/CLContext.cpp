@@ -12,16 +12,10 @@ namespace OpenCL
 	{
 	}
 
-	Context::Context(const Device& device, 
+	Context::Context(const std::shared_ptr<OpenCL::Device>& device,
 					 const ContextProperties& properties)
 	{
-		Initialize(device.Get(), properties);
-	}
-
-	Context::Context(cl_device_id device, 
-					 const ContextProperties& properties)
-	{
-		Initialize(device, properties);
+		Initialize(device->Get(), properties);
 	}
 
 	Context::~Context()

@@ -2,8 +2,9 @@
 
 #include "OpenCLLib.h"
 
-#include "Core/CLCore.h"
+#include "Core/CLDevice.h"
 #include "Core/CLContext.h"
+#include "Core/CLCore.h"
 
 namespace OpenCL
 {
@@ -12,12 +13,7 @@ namespace OpenCL
 	public:
 		Buffer();
 
-		Buffer(cl_context context,
-			   void* dataPtr,
-			   size_t dataSize,
-			   AccessType type);
-
-		Buffer(const OpenCL::Context& context,
+		Buffer(const std::shared_ptr<Context>& context,
 			   void* dataPtr,
 			   size_t dataSize,
 			   AccessType type);
@@ -25,7 +21,6 @@ namespace OpenCL
 		~Buffer();
 	public:
 		operator cl_mem() const { return mpBuffer; }
-
 		cl_mem Get() const { return mpBuffer; }
 	private:
 		void Initialize(cl_context context,

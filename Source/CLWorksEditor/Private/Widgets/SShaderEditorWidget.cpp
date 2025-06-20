@@ -11,8 +11,8 @@ void SShaderEditorWidget::Construct(const FArguments& InArgs)
 	// Initial Internal Data --------------------
 	mpProgramData = MakeShared<ProgramData>();
 
-	mpProgramData->mpDevice = new OpenCL::Device();
-	mpProgramData->mpContext = new OpenCL::Context(*mpProgramData->mpDevice);
+	mpProgramData->mpDevice = OpenCL::MakeDevice();
+	mpProgramData->mpContext = OpenCL::MakeContext(mpProgramData->mpDevice);
 	// ------------------------------------------
 
 	ChildSlot
@@ -83,7 +83,7 @@ FReply SShaderEditorWidget::OnCompileClicked()
 	}
 	else
 	{
-		OpenCL::Program program(*mpProgramData->mpContext, *mpProgramData->mpDevice);
+		OpenCL::Program program(mpProgramData->mpContext, mpProgramData->mpDevice);
 
 		std::string sourceCode = TCHAR_TO_UTF8(*mpProgramAsset->SourceCode);
 
@@ -193,20 +193,5 @@ void SShaderEditorWidget::UpdateLineNumbers(const FString& Text)
 	if (mpLineNumberDisplay.IsValid())
 	{
 		mpLineNumberDisplay->UpdateLineNumbers(Lines.Num());
-	}
-}
-
-SShaderEditorWidget::ProgramData::~ProgramData()
-{
-	if (mpDevice)
-	{
-		delete mpDevice;
-		mpDevice = nullptr;
-	}
-
-	if (mpContext)
-	{
-		delete mpContext;
-		mpContext = nullptr;
 	}
 }

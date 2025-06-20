@@ -76,17 +76,8 @@ namespace OpenCL
 	public:
 		Image();
 
-		Image(const OpenCL::Context& context,
-			  const OpenCL::Device& device,
-			  uint32_t width,
-			  uint32_t height,
-			  uint32_t depthOrLayer = 1,
-			  Format format = Format::RGBA8,
-			  Type type = Type::Texture2D,
-			  AccessType access = AccessType::READ_WRITE);
-
-		Image(cl_context context,
-			  cl_device_id device,
+		Image(const std::shared_ptr<OpenCL::Context>& context,
+			  const std::shared_ptr<OpenCL::Device>& device,
 			  uint32_t width,
 			  uint32_t height,
 			  uint32_t depthOrLayer = 1,
@@ -155,9 +146,10 @@ namespace OpenCL
 									void* src,
 									bool genMips);
 	private:
-		cl_context mpContext = nullptr;
-		cl_device_id mpDevice = nullptr;
 		cl_mem mpImage = nullptr;
+
+		std::weak_ptr<OpenCL::Context> mpContext;
+		std::weak_ptr<OpenCL::Device> mpDevice;
 
 		Format mFormat = Format::Undefined;
 		Type mType = Type::Undefined;
