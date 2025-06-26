@@ -95,38 +95,44 @@ namespace OpenCL
 		size_t GetChannelDataSize() const;
 		size_t GetDataSize() const;
 
-		TObjectPtr<UTexture2D> CreateUTexture2D(cl_command_queue queueOverride = nullptr,
+		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue,
+												bool isSRGB = true,
 												bool genMips = false,
 												bool async = false,
 												uint32_t maxBytesPerUpload = 64 * 2048);
 
-		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(cl_command_queue queueOverride = nullptr,
+		TObjectPtr<UTexture2DArray> CreateUTexture2DArray(const OpenCL::CommandQueue& queue,
+														  bool isSRGB = true,
 														  bool genMips = false);
 
-		TObjectPtr<UVolumeTexture> CreateUVolumeTexture(cl_command_queue queueOverride = nullptr);
+		TObjectPtr<UVolumeTexture> CreateUVolumeTexture(const OpenCL::CommandQueue& queue);
 
 		bool UploadToUTexture2D(TObjectPtr<UTexture2D> output,
-								cl_command_queue queueOverride = nullptr,
+								const OpenCL::CommandQueue& queue,
 								bool genMips = false,
 								bool async = false,
 								uint32_t maxBytesPerUpload = 64 * 2048);
 		
 		bool UploadToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> output,
-											cl_command_queue queueOverride = nullptr,
+											const OpenCL::CommandQueue& queue,
 											bool genMips = false,
 											const std::function<void()>& onUploadComplete = nullptr);
 
 		bool UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
-									 cl_command_queue queueOverride = nullptr,
+									 const OpenCL::CommandQueue& queue,
 									 bool genMips = false);
 
 		bool UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> output,
-									cl_command_queue queueOverride = nullptr);
+									const OpenCL::CommandQueue& queue);
+
+		bool Fetch(const OpenCL::CommandQueue& queue, 
+				   void* output = nullptr,
+				   bool isBlocking = true) const;
 	private:
 		cl_mem CreateCLImage();
 
-		bool ReadFromCL(void** output = nullptr,
-						cl_command_queue overrideQueue = nullptr,
+		bool ReadFromCL(const OpenCL::CommandQueue& queue, 
+						void** output = nullptr,
 						bool isBlocking = true) const;
 
 		bool GenerateMips2D(std::vector<Mip>& output,

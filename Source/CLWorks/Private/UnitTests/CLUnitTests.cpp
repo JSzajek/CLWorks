@@ -163,20 +163,19 @@ void FCLUnitTestsSpecs::Define()
 
 			size_t count = 10;
 			std::vector<float> test_input(count, 0.0f);
-			std::vector<float> test_output(count, 0.0f);
 			std::vector<float> test_inout(count, 0.0f);
 
 
-			OpenCL::Buffer buffer_input(context, test_input.data(), count * sizeof(float), OpenCL::AccessType::READ_ONLY);
-			if (!TestNotNull(TEXT("Failed Read-Only Buffer Creation!"), buffer_input.Get()))
+			OpenCL::Buffer buffer_output(mpDefaultDevice, context, test_input.data(), count * sizeof(float), OpenCL::AccessType::WRITE_ONLY, OpenCL::MemoryStrategy::COPY_ONCE);
+			if (!TestTrue(TEXT("Failed Write-Only Buffer Creation!"), buffer_output.IsValid()))
 				return;
 
-			OpenCL::Buffer buffer_output(context, test_output.data(), count * sizeof(float), OpenCL::AccessType::WRITE_ONLY);
-			if (!TestNotNull(TEXT("Failed Write-Only Buffer Creation!"), buffer_output.Get()))
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, nullptr, count * sizeof(float), OpenCL::AccessType::READ_ONLY, OpenCL::MemoryStrategy::STREAM);
+			if (!TestTrue(TEXT("Failed Read-Only Buffer Creation!"), buffer_input.IsValid()))
 				return;
 
-			OpenCL::Buffer buffer_inout(context, test_inout.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE);
-			TestNotNull(TEXT("Failed Read-Write Buffer Creation!"), buffer_output.Get());
+			OpenCL::Buffer buffer_inout(mpDefaultDevice, context, test_inout.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE, OpenCL::MemoryStrategy::STREAM);
+			TestTrue(TEXT("Failed Read-Write Buffer Creation!"), buffer_inout.IsValid());
 		});
 
 		It("(2) Buffer Read", [this]()
@@ -186,14 +185,14 @@ void FCLUnitTestsSpecs::Define()
 			size_t count = 5;
 			std::vector<float> input_data = { 30, 2, 45, 19, 54 };
 
-			OpenCL::Buffer buffer_input(context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_ONLY);
-			if (!TestNotNull(TEXT("Failed Read-Only Buffer Creation!"), buffer_input.Get()))
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE, OpenCL::MemoryStrategy::STREAM);
+			if (!TestTrue(TEXT("Failed Read-Only Buffer Creation!"), buffer_input.IsValid()))
 				return;
 
 			std::vector<float> target_output(count, 0.0f);
 
 			OpenCL::CommandQueue queue(context, mpDefaultDevice);
-			queue.ReadBuffer(buffer_input, count * sizeof(float), target_output.data());
+			buffer_input.Fetch(queue, target_output.data(), count * sizeof(float));
 
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -203,7 +202,7 @@ void FCLUnitTestsSpecs::Define()
 			}
 		});
 
-		It("(3) Buffer Write", [this]()
+		It("(3) Buffer Read & Write", [this]()
 		{
 			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
 
@@ -219,19 +218,19 @@ void FCLUnitTestsSpecs::Define()
 			std::vector<float> input_data = { 30, 2, 45, 19, 54 };
 			std::vector<float> target_output = { 60, 4, 90, 38, 108 };
 
-			OpenCL::Buffer buffer_input(context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE);
-			if (!TestNotNull(TEXT("Failed Read-Write Buffer Creation!"), buffer_input.Get()))
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE, OpenCL::MemoryStrategy::STREAM);
+			if (!TestTrue(TEXT("Failed Read-Write Buffer Creation!"), buffer_input.IsValid()))
 				return;
 
 			OpenCL::Kernel kernel(program, "double_data");
 			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
-			kernel.SetArgument<cl_mem>(0, buffer_input);
+			kernel.SetArgument<OpenCL::Buffer>(0, buffer_input);
 
 			queue.EnqueueRange(kernel, 1, &count);
 
 			std::vector<float> output_data(count, 0.0f);
-			queue.ReadBuffer(buffer_input, count * sizeof(float), output_data.data());
+			buffer_input.Fetch(queue, output_data.data(), count * sizeof(float));
 
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -241,7 +240,45 @@ void FCLUnitTestsSpecs::Define()
 			}
 		});
 
-		It("(4) Multi-Buffer Access", [this]()
+		It("(4) Zero Copy Buffers", [this]()
+		{
+			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
+
+			OpenCL::Program program(context, mpDefaultDevice);
+			program.ReadFromString("__kernel void half_data(__global float* data)\n" 
+								   "{ int i = get_global_id(0); \n"
+								   "data[i] = data[i] * 0.5f; }");
+
+			if (!TestTrue(TEXT("Invalid Program!"), program.Get() != nullptr))
+				return;
+
+			size_t count = 5;
+			std::vector<float> input_data = { 30, 2, 45, 19, 54 };
+			std::vector<float> target_output = { 15, 1, 22.5, 9.5, 27 };
+
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE, OpenCL::MemoryStrategy::ZERO_COPY);
+			if (!TestTrue(TEXT("Failed Read-Write Buffer Creation!"), buffer_input.IsValid()))
+				return;
+
+			OpenCL::Kernel kernel(program, "half_data");
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
+
+			kernel.SetArgument<OpenCL::Buffer>(0, buffer_input);
+
+			queue.EnqueueRange(kernel, 1, &count);
+
+			std::vector<float> output_data(count, 0.0f);
+			buffer_input.Fetch(queue, output_data.data(), count * sizeof(float));
+
+			for (size_t i = 0; i < count; ++i)
+			{
+				std::string msg = (std::to_string(target_output[i]) + " != " + std::to_string(output_data[i]));
+				if (!TestTrue(FString(msg.c_str()), target_output[i] == output_data[i]))
+					return;
+			}
+		});
+
+		It("(5) Multi-Buffer Access", [this]()
 		{
 			//TODO:: Implement
 		});
@@ -262,14 +299,14 @@ void FCLUnitTestsSpecs::Define()
 			size_t count = 5;
 			std::vector<float> input_data(count, 3.0f);
 
-			OpenCL::Buffer buffer_input(context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE);
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_WRITE, OpenCL::MemoryStrategy::STREAM);
 			if (!TestNotNull(TEXT("Failed Read-Write Buffer Creation!"), buffer_input.Get()))
 				return;
 
 			OpenCL::Kernel kernel(program, "test");
 			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
-			kernel.SetArgument<cl_mem>(0, buffer_input);
+			kernel.SetArgument<OpenCL::Buffer>(0, buffer_input);
 			if (!TestTrue(TEXT("Couldn't Set Kernel Arguments!"), kernel.IsValid()))
 				return;
 
@@ -292,16 +329,16 @@ void FCLUnitTestsSpecs::Define()
 			size_t count = 5;
 			std::vector<float> input_data = { 30, 2, 45, 19, 54 };
 
-			OpenCL::Buffer buffer_input(context, input_data.data(), count * sizeof(float), OpenCL::AccessType::READ_ONLY);
-			OpenCL::Buffer buffer_output(context, input_data.data(), count * sizeof(float), OpenCL::AccessType::WRITE_ONLY);
+			OpenCL::Buffer buffer_input(mpDefaultDevice, context, input_data.data(), count * sizeof(float), OpenCL::AccessType::WRITE_ONLY, OpenCL::MemoryStrategy::COPY_ONCE);
+			OpenCL::Buffer buffer_output(mpDefaultDevice, context, nullptr, count * sizeof(float), OpenCL::AccessType::READ_ONLY, OpenCL::MemoryStrategy::STREAM);
 			if (!TestNotNull(TEXT("Failed Read-Write Buffer Creation!"), buffer_input.Get()))
 				return;
 
 			OpenCL::Kernel kernel(program, "triple_data");
 			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
-			kernel.SetArgument<cl_mem>(0, buffer_input);
-			kernel.SetArgument<cl_mem>(1, buffer_output);
+			kernel.SetArgument<OpenCL::Buffer>(0, buffer_input);
+			kernel.SetArgument<OpenCL::Buffer>(1, buffer_output);
 
 			// Partial Range --------------------------------------------------
 			size_t range = 2;
@@ -312,7 +349,7 @@ void FCLUnitTestsSpecs::Define()
 			std::vector<float> part_target_output = { 90, 6, 45, 19, 54 };
 
 			std::vector<float> part_output_data(count, 0.0f);
-			queue.ReadBuffer(buffer_output, range * sizeof(float), part_output_data.data());
+			buffer_output.Fetch(queue, part_output_data.data(), range * sizeof(float));
 
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -338,7 +375,7 @@ void FCLUnitTestsSpecs::Define()
 			std::vector<float> full_target_output = { 90, 6, 135, 57, 162 };
 
 			std::vector<float> full_output_data(count, 0.0f);
-			queue.ReadBuffer(buffer_output, count * sizeof(float), full_output_data.data());
+			buffer_output.Fetch(queue, full_output_data.data(), count * sizeof(float));
 
 			for (size_t i = 0; i < count; ++i)
 			{
@@ -403,7 +440,7 @@ void FCLUnitTestsSpecs::Define()
 			const size_t numChannels = cltexture.GetChannelCount();
 
 			std::vector<uint8_t> output_data(numPixels * numChannels, 0);
-			queue.ReadImageTo(cltexture, output_data.data());
+			cltexture.Fetch(queue, output_data.data());
 
 			for (size_t i = 0; i < numPixels; i += numChannels)
 			{
@@ -420,6 +457,7 @@ void FCLUnitTestsSpecs::Define()
 		It("(3) Texture2D UE", [this]()
 		{
 			OpenCL::ContextPtr context = MakeContext(mpDefaultDevice);
+			OpenCL::CommandQueue queue(context, mpDefaultDevice);
 
 			OpenCL::Image cltexture(context,
 									  mpDefaultDevice,
@@ -433,7 +471,7 @@ void FCLUnitTestsSpecs::Define()
 				return;
 
 			// Create a texture in UE
-			TObjectPtr<UTexture2D> texture = cltexture.CreateUTexture2D();
+			TObjectPtr<UTexture2D> texture = cltexture.CreateUTexture2D(queue);
 
 			TestNotNull(TEXT("Failed Texture2D Creation!"), texture.Get());
 
@@ -464,7 +502,7 @@ void FCLUnitTestsSpecs::Define()
 				if (!TestNotNull(FString(failedCLMsg.c_str()), cltexture.Get()))
 					return;
 
-				UTexture2D* utexture = cltexture.CreateUTexture2D(queue, true);
+				UTexture2D* utexture = cltexture.CreateUTexture2D(queue, true, true);
 
 				const std::string failedUEMsg = "Failed UTexture2D Creation! " + std::to_string(format);
 				if (TestNotNull(FString(failedUEMsg.c_str()), utexture))
@@ -519,7 +557,7 @@ void FCLUnitTestsSpecs::Define()
 				if (!TestNotNull(FString(failedCLMsg.c_str()), cltexture.Get()))
 					return;
 
-				UTexture2DArray* utexture = cltexture.CreateUTexture2DArray(queue, true);
+				UTexture2DArray* utexture = cltexture.CreateUTexture2DArray(queue, true, true);
 
 				const std::string failedUEMsg = "Failed UTexture2DArray Creation! " + std::to_string(format);
 				if (TestNotNull(FString(failedUEMsg.c_str()), utexture))
@@ -702,13 +740,13 @@ void FCLUnitTestsSpecs::Define()
 				return;
 
 			const size_t dataSize = numValues * sizeof(float);
-			OpenCL::Buffer bufferA(context, vectorA.data(), dataSize, OpenCL::AccessType::READ_ONLY);
-			OpenCL::Buffer bufferB(context, vectorB.data(), dataSize, OpenCL::AccessType::READ_ONLY);
-			OpenCL::Buffer outputBuffer(context, output.data(), dataSize, OpenCL::AccessType::WRITE_ONLY);
+			OpenCL::Buffer bufferA(mpDefaultDevice, context, vectorA.data(), dataSize, OpenCL::AccessType::READ_ONLY, OpenCL::MemoryStrategy::COPY_ONCE);
+			OpenCL::Buffer bufferB(mpDefaultDevice, context, vectorB.data(), dataSize, OpenCL::AccessType::READ_ONLY, OpenCL::MemoryStrategy::COPY_ONCE);
+			OpenCL::Buffer outputBuffer(mpDefaultDevice, context, nullptr, dataSize, OpenCL::AccessType::WRITE_ONLY, OpenCL::MemoryStrategy::STREAM);
 
-			kernel.SetArgument<cl_mem>(0, bufferA);
-			kernel.SetArgument<cl_mem>(1, bufferB);
-			kernel.SetArgument<cl_mem>(2, outputBuffer);
+			kernel.SetArgument<OpenCL::Buffer>(0, bufferA);
+			kernel.SetArgument<OpenCL::Buffer>(1, bufferB);
+			kernel.SetArgument<OpenCL::Buffer>(2, outputBuffer);
 
 			if (!TestTrue(TEXT("Couldn't Set Kernel Arguments!"), kernel.IsValid()))
 				return;
@@ -718,7 +756,7 @@ void FCLUnitTestsSpecs::Define()
 			if (!TestTrue(TEXT("Couldn't Enqueue the Kernel!"), queue.IsValid()))
 				return;
 
-			queue.ReadBuffer(outputBuffer, numValues * sizeof(float), output.data());
+			outputBuffer.Fetch(queue, output.data(), numValues * sizeof(float));
 
 			if (!TestTrue(TEXT("Couldn't Read the Buffer!"), queue.IsValid()))
 				return;

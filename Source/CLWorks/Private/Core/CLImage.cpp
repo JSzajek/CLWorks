@@ -94,7 +94,8 @@ namespace OpenCL
 		return 0;
 	}
 
-	TObjectPtr<UTexture2D> Image::CreateUTexture2D(cl_command_queue queueOverride,
+	TObjectPtr<UTexture2D> Image::CreateUTexture2D(const OpenCL::CommandQueue& queue,
+												   bool isSRGB,
 												   bool genMips,
 												   bool async,
 												   uint32_t maxBytesPerUpload)
@@ -117,7 +118,7 @@ namespace OpenCL
 
 
 		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
+		if (!ReadFromCL(queue, &pixelData))
 			return nullptr;
 
 		const size_t dataSize = GetDataSize();
@@ -125,12 +126,14 @@ namespace OpenCL
 		UTexture2D* texture = NewObject<UTexture2D>(GetTransientPackage(),
 												    NAME_None,
 												    RF_Transient);
+		texture->SRGB = isSRGB;
 
-		texture->SetPlatformData(new FTexturePlatformData());
-		texture->GetPlatformData()->SizeX = mWidth;
-		texture->GetPlatformData()->SizeY = mHeight;
-		texture->GetPlatformData()->SetNumSlices(1);
-		texture->GetPlatformData()->PixelFormat = pixelFormat;
+		FTexturePlatformData* platformData = new FTexturePlatformData();
+		texture->SetPlatformData(platformData);
+		platformData->SizeX = mWidth;
+		platformData->SizeY = mHeight;
+		platformData->SetNumSlices(1);
+		platformData->PixelFormat = pixelFormat;
 		
 		if (async)
 		{
@@ -144,7 +147,8 @@ namespace OpenCL
 		return texture;
 	}
 
-	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray(cl_command_queue queueOverride, 
+	TObjectPtr<UTexture2DArray> Image::CreateUTexture2DArray(const OpenCL::CommandQueue& queue,
+															 bool isSRGB,
 															 bool genMips)
 	{
 		if (!mpImage)
@@ -165,7 +169,7 @@ namespace OpenCL
 
 
 		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
+		if (!ReadFromCL(queue, &pixelData))
 			return nullptr;
 
 		const size_t dataSize = GetDataSize();
@@ -173,25 +177,27 @@ namespace OpenCL
 		UTexture2DArray* texture = NewObject<UTexture2DArray>(GetTransientPackage(),
 															  NAME_None,
 															  RF_Transient);
+		texture->SRGB = isSRGB;
 
-		texture->SetPlatformData(new FTexturePlatformData());
-		texture->GetPlatformData()->SizeX = mWidth;
-		texture->GetPlatformData()->SizeY = mHeight;
-		texture->GetPlatformData()->SetNumSlices(mDepthOrLayer);
-		texture->GetPlatformData()->PixelFormat = pixelFormat;
+		FTexturePlatformData* platformData = new FTexturePlatformData();
+		texture->SetPlatformData(platformData);
+		platformData->SizeX = mWidth;
+		platformData->SizeY = mHeight;
+		platformData->SetNumSlices(mDepthOrLayer);
+		platformData->PixelFormat = pixelFormat;
 
 		WriteToUTexture2DArray(texture, pixelData, genMips);
 
 		return texture;
 	}
 
-	TObjectPtr<UVolumeTexture> Image::CreateUVolumeTexture(cl_command_queue queueOverride)
+	TObjectPtr<UVolumeTexture> Image::CreateUVolumeTexture(const OpenCL::CommandQueue& queue)
 	{
 		throw std::exception("Not Implemented");
 	}
 
 	bool Image::UploadToUTexture2D(TObjectPtr<UTexture2D> output,
-								   cl_command_queue queueOverride,
+								   const OpenCL::CommandQueue& queue,
 								   bool genMips,
 								   bool async,
 								   uint32_t maxBytesPerUpload)
@@ -219,7 +225,7 @@ namespace OpenCL
 		}
 
 		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
+		if (!ReadFromCL(queue, &pixelData))
 			return false;
 
 		if (async)
@@ -235,7 +241,7 @@ namespace OpenCL
 	}
 
 	bool Image::UploadToUTextureRenderTarget2D(TObjectPtr<UTextureRenderTarget2D> output, 
-											   cl_command_queue queueOverride, 
+											   const OpenCL::CommandQueue& queue, 
 											   bool genMips,
 											   const std::function<void()>& onUploadComplete)
 	{
@@ -262,12 +268,12 @@ namespace OpenCL
 		}
 
 		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
+		if (!ReadFromCL(queue, &pixelData))
 			return false;
 
 
 		// Create temporary Texture2D
-		TObjectPtr<UTexture2D> texture = CreateUTexture2D(queueOverride, genMips);
+		TObjectPtr<UTexture2D> texture = CreateUTexture2D(queue, genMips);
 
 
 		// Blit Texture2D to RenderTarget2D
@@ -277,7 +283,7 @@ namespace OpenCL
 	}
 
 	bool Image::UploadToUTexture2DArray(TObjectPtr<UTexture2DArray> output,
-										cl_command_queue queueOverride, 
+										const OpenCL::CommandQueue& queue, 
 										bool genMips)
 	{
 		if (mType != Type::Texture2DArray)
@@ -310,7 +316,7 @@ namespace OpenCL
 		}
 
 		void* pixelData = nullptr;
-		if (!ReadFromCL(&pixelData, queueOverride))
+		if (!ReadFromCL(queue, &pixelData))
 			return false;
 
 		WriteToUTexture2DArray(output, pixelData, genMips);
@@ -320,9 +326,16 @@ namespace OpenCL
 
 
 	bool Image::UploadToUVolumeTexture(TObjectPtr<UVolumeTexture> output,
-									   cl_command_queue queueOverride)
+									   const OpenCL::CommandQueue& queue)
 	{
 		throw std::exception("Not Implemented");
+	}
+
+	bool Image::Fetch(const OpenCL::CommandQueue& queue, 
+						 void* output, 
+						 bool isBlocking) const
+	{
+		return ReadFromCL(queue, &output, isBlocking);
 	}
 
 	cl_mem Image::CreateCLImage()
@@ -439,8 +452,8 @@ namespace OpenCL
 		return img;
 	}
 
-	bool Image::ReadFromCL(void** output,
-						   cl_command_queue overrideQueue,
+	bool Image::ReadFromCL(const OpenCL::CommandQueue& queue,
+						   void** output,
 						   bool isBlocking) const
 	{
 		const std::shared_ptr<Context> context_ptr = mpContext.lock();
@@ -500,9 +513,9 @@ namespace OpenCL
 		}
 
 		int32_t err = 0;
-		if (overrideQueue)
+		if (queue.Get())
 		{
-			err = clEnqueueReadImage(overrideQueue,
+			err = clEnqueueReadImage(queue,
 									 mpImage, 
 									 isBlocking ? CL_TRUE : CL_FALSE,
 									 origin, 
@@ -516,8 +529,8 @@ namespace OpenCL
 		}
 		else
 		{
-			OpenCL::CommandQueue queue(context_ptr, device_ptr);
-			err = clEnqueueReadImage(queue.Get(),
+			OpenCL::CommandQueue localqueue(context_ptr, device_ptr);
+			err = clEnqueueReadImage(localqueue.Get(),
 									 mpImage, 
 									 isBlocking ? CL_TRUE : CL_FALSE,
 									 origin, 

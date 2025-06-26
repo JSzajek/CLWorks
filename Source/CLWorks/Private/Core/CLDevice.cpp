@@ -83,10 +83,26 @@ namespace OpenCL
 		clGetDeviceInfo(mpDevice, CL_DEVICE_IMAGE_SUPPORT, sizeof(cl_bool), &image_support, NULL);
 		if (!image_support)
 		{
-			UE_LOG(LogCLWorks, Error, TEXT("OpenCL Device Does Not Support Images!"));
+			UE_LOG(LogCLWorks, Log, TEXT("OpenCL Device Does Not Support Images!"));
 			return false;
 		}
 		return true;
+	}
+
+	SVMSupport Device::GetSVMSupported() const
+	{
+		cl_device_svm_capabilities capabilities;
+		clGetDeviceInfo(mpDevice, CL_DEVICE_SVM_CAPABILITIES, sizeof(cl_device_svm_capabilities), &capabilities, NULL);
+
+		bool bHasCoarseGrainSupport = capabilities & CL_DEVICE_SVM_COARSE_GRAIN_BUFFER;
+		bool bHasFineGrainSupport = capabilities & CL_DEVICE_SVM_FINE_GRAIN_BUFFER;
+
+		if (!bHasCoarseGrainSupport && !bHasFineGrainSupport)
+		{
+			UE_LOG(LogCLWorks, Log, TEXT("OpenCL Device Does Not SVM!"));
+			return SVMSupport::None;
+		}
+		return bHasFineGrainSupport ? SVMSupport::Fine : SVMSupport::Coarse;
 	}
 
 	bool Device::IsExtensionSupported(const std::string& extension) const

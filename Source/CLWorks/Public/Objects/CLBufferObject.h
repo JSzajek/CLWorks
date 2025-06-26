@@ -21,7 +21,8 @@ protected:
 	void Initialize(const TObjectPtr<UCLContextObject>& context,
 					void* dataPtr,
 					int32 dataSize,
-					UCLAccessType type);
+					UCLAccessType type,
+					UCLMemoryStrategy strategy);
 private:
 	std::shared_ptr<OpenCL::Buffer> mpBuffer;
 };

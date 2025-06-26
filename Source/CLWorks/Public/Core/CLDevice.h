@@ -6,6 +6,13 @@
 
 namespace OpenCL
 {
+	enum SVMSupport : uint8_t
+	{
+		None = 0,
+		Coarse,
+		Fine,
+	};
+
 	class CLWORKS_API Device
 	{
 	public:
@@ -15,6 +22,7 @@ namespace OpenCL
 		~Device();
 	public:
 		bool AreImagesSupported() const;
+		SVMSupport GetSVMSupported() const;
 		bool IsExtensionSupported(const std::string& extension) const;
 	public:
 		operator cl_device_id() const { return mpDevice; }

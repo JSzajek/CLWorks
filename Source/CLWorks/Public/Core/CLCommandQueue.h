@@ -1,15 +1,14 @@
 #pragma once
 
-#include "Core/CLContext.h"
 #include "Core/CLDevice.h"
 
-#include "Core/CLKernel.h"
-
-#include "Core/CLBuffer.h"
-#include "Core/CLImage.h"
+#include <memory>
 
 namespace OpenCL
 {
+	class Context;
+	class Kernel;
+
 	class CLWORKS_API CommandQueue
 	{
 	public:
@@ -34,6 +33,7 @@ namespace OpenCL
 						  const size_t* global_work_size,
 						  const size_t* local_work_size = nullptr);
 
+	#if 0
 		void ReadBuffer(const OpenCL::Buffer& buffer, 
 						size_t data_size, 
 						void* output,
@@ -45,6 +45,7 @@ namespace OpenCL
 
 		void* ReadImage(const OpenCL::Image& image,
 					    bool isBlocking = true);
+	#endif
 	private:
 		void Initialize(cl_context context, 
 						cl_device_id device);

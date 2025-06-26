@@ -99,6 +99,7 @@ UCLProgramObject* UCLWorksLibrary::CreateProgram(UCLProgramAsset* asset,
 
 UCLBufferObject* UCLWorksLibrary::CreateIntBuffer(const TArray<int32>& values,
 												  UCLAccessType access,
+												  UCLMemoryStrategy strategy,
 												  UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -106,7 +107,8 @@ UCLBufferObject* UCLWorksLibrary::CreateIntBuffer(const TArray<int32>& values,
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(int32),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -118,6 +120,7 @@ UCLBufferObject* UCLWorksLibrary::CreateIntBuffer(const TArray<int32>& values,
 
 UCLBufferObject* UCLWorksLibrary::CreateFloatBuffer(const TArray<float>& values, 
 													UCLAccessType access,
+													UCLMemoryStrategy strategy,
 													UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -125,7 +128,8 @@ UCLBufferObject* UCLWorksLibrary::CreateFloatBuffer(const TArray<float>& values,
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(float),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -137,6 +141,7 @@ UCLBufferObject* UCLWorksLibrary::CreateFloatBuffer(const TArray<float>& values,
 
 UCLBufferObject* UCLWorksLibrary::CreateIntVector2Buffer(const TArray<FIntPoint>& values,
 														 UCLAccessType access, 
+														 UCLMemoryStrategy strategy,
 														 UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -144,7 +149,8 @@ UCLBufferObject* UCLWorksLibrary::CreateIntVector2Buffer(const TArray<FIntPoint>
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(FIntPoint),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -156,6 +162,7 @@ UCLBufferObject* UCLWorksLibrary::CreateIntVector2Buffer(const TArray<FIntPoint>
 
 UCLBufferObject* UCLWorksLibrary::CreateIntVector4Buffer(const TArray<FIntVector4>& values,
 														 UCLAccessType access, 
+														 UCLMemoryStrategy strategy,
 														 UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -163,7 +170,8 @@ UCLBufferObject* UCLWorksLibrary::CreateIntVector4Buffer(const TArray<FIntVector
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(FIntVector4),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -175,6 +183,7 @@ UCLBufferObject* UCLWorksLibrary::CreateIntVector4Buffer(const TArray<FIntVector
 
 UCLBufferObject* UCLWorksLibrary::CreateVector2fBuffer(const TArray<FVector2f>& values,
 													   UCLAccessType access, 
+													   UCLMemoryStrategy strategy,
 													   UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -182,7 +191,8 @@ UCLBufferObject* UCLWorksLibrary::CreateVector2fBuffer(const TArray<FVector2f>& 
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(FVector2f),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -194,6 +204,7 @@ UCLBufferObject* UCLWorksLibrary::CreateVector2fBuffer(const TArray<FVector2f>& 
 
 UCLBufferObject* UCLWorksLibrary::CreateVector4fBuffer(const TArray<FVector4f>& values,
 													   UCLAccessType access, 
+													   UCLMemoryStrategy strategy,
 													   UCLContextObject* contextOverride)
 {
 	UCLBufferObject* buffer = NewObject<UCLBufferObject>(GetTransientPackage(), NAME_None, RF_Transient);
@@ -201,7 +212,8 @@ UCLBufferObject* UCLWorksLibrary::CreateVector4fBuffer(const TArray<FVector4f>& 
 	buffer->Initialize(contextOverride ? contextOverride : mpGlobalContext,
 					   (void*)values.GetData(),
 					   values.Num() * sizeof(FVector4f),
-					   access);
+					   access,
+					   strategy);
 
 	if (!buffer->GetData())
 	{
@@ -281,9 +293,7 @@ TArray<int32> UCLWorksLibrary::ReadIntBuffer(UCLBufferObject* buffer,
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(int32),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(int32), 0);
 
 	return output;
 }
@@ -297,9 +307,7 @@ TArray<float> UCLWorksLibrary::ReadFloatBuffer(UCLBufferObject* buffer,
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(float),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(float), 0);
 
 	return output;
 }
@@ -313,9 +321,7 @@ TArray<FIntPoint> UCLWorksLibrary::ReadIntVector2Buffer(UCLBufferObject* buffer,
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(FIntPoint),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(FIntPoint), 0);
 
 	return output;
 }
@@ -329,9 +335,7 @@ TArray<FIntVector4> UCLWorksLibrary::ReadIntVector4Buffer(UCLBufferObject* buffe
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(FIntVector4),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(FIntVector4), 0);
 
 	return output;
 }
@@ -345,9 +349,7 @@ TArray<FVector2f> UCLWorksLibrary::ReadVector2fBuffer(UCLBufferObject* buffer,
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(FVector2f),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(FVector2f), 0);
 
 	return output;
 }
@@ -361,16 +363,15 @@ TArray<FVector4f> UCLWorksLibrary::ReadVector4fBuffer(UCLBufferObject* buffer,
 	output.SetNumZeroed(numElements);
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
-	commandQueue.ReadBuffer(*buffer->mpBuffer,
-						    numElements * sizeof(FVector4f),
-						    output.GetData());
+	buffer->mpBuffer->Fetch(commandQueue, output.GetData(), numElements * sizeof(FVector4f), 0);
 
 	return output;
 }
 
 UTexture2D* UCLWorksLibrary::ImageToTexture2D(UCLImageObject* image, 
-													UCLCommandQueueObject* queueOverride,
-													bool generateMipMaps)
+											  UCLCommandQueueObject* queueOverride,
+											  bool isSRGB,
+											  bool generateMipMaps)
 {
 	if (image->GetData() == nullptr)
 	{
@@ -380,11 +381,12 @@ UTexture2D* UCLWorksLibrary::ImageToTexture2D(UCLImageObject* image,
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
 
-	return image->mpImage->CreateUTexture2D(commandQueue, generateMipMaps);
+	return image->mpImage->CreateUTexture2D(commandQueue, isSRGB, generateMipMaps);
 }
 
 UTexture2DArray* UCLWorksLibrary::ImageToTexture2DArray(UCLImageObject* image, 
 														UCLCommandQueueObject* queueOverride, 
+														bool isSRGB,
 														bool generateMipMaps)
 {
 	if (image->GetData() == nullptr)
@@ -395,7 +397,7 @@ UTexture2DArray* UCLWorksLibrary::ImageToTexture2DArray(UCLImageObject* image,
 
 	OpenCL::CommandQueue& commandQueue = queueOverride ? *queueOverride->mpQueue : *mpGlobalQueue->mpQueue;
 
-	return image->mpImage->CreateUTexture2DArray(commandQueue, generateMipMaps);
+	return image->mpImage->CreateUTexture2DArray(commandQueue, isSRGB, generateMipMaps);
 }
 
 bool UCLWorksLibrary::WriteToRenderTarget2D(UTextureRenderTarget2D* output,

@@ -14,6 +14,14 @@ enum class UCLAccessType : uint8
 };
 
 UENUM(BlueprintType)
+enum class UCLMemoryStrategy : uint8
+{
+	COPY_ONCE		UMETA(DisplayName = "Upload-Only"),
+	STREAM			UMETA(DisplayName = "Stream"),
+	ZERO_COPY		UMETA(DisplayName = "Zero-Copy"),
+};
+
+UENUM(BlueprintType)
 enum class UCLImageType : uint8
 {
 	Texture2D		UMETA(DisplayName = "2D"),

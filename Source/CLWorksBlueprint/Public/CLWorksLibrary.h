@@ -57,31 +57,37 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Integer Buffer")
 	static UCLBufferObject* CreateIntBuffer(const TArray<int32>& values,
 											UCLAccessType access = UCLAccessType::READ_WRITE,
+											UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 											UCLContextObject* contextOverride = nullptr);
 	
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Float Buffer")
 	static UCLBufferObject* CreateFloatBuffer(const TArray<float>& values,
 											  UCLAccessType access = UCLAccessType::READ_WRITE,
+											  UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 											  UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Integer Vec2 Buffer")
 	static UCLBufferObject* CreateIntVector2Buffer(const TArray<FIntPoint>& values,
 												   UCLAccessType access = UCLAccessType::READ_WRITE,
+												   UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 												   UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Integer Vec4 Buffer")
 	static UCLBufferObject* CreateIntVector4Buffer(const TArray<FIntVector4>& values,
 												   UCLAccessType access = UCLAccessType::READ_WRITE,
+												   UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 												   UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Float Vec2 Buffer")
 	static UCLBufferObject* CreateVector2fBuffer(const TArray<FVector2f>& values,
 												 UCLAccessType access = UCLAccessType::READ_WRITE,
+												 UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 												 UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Float Vec4 Buffer")
 	static UCLBufferObject* CreateVector4fBuffer(const TArray<FVector4f>& values,
 												 UCLAccessType access = UCLAccessType::READ_WRITE,
+												 UCLMemoryStrategy strategy = UCLMemoryStrategy::STREAM,
 												 UCLContextObject* contextOverride = nullptr);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Image")
@@ -137,11 +143,13 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Convert To Texture2D")
 	static UTexture2D* ImageToTexture2D(UCLImageObject* image,
 									    UCLCommandQueueObject* queueOverride = nullptr,
+										bool isSRGB = true,
 									    bool generateMipMaps = false);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Convert To Texture2DArray")
 	static UTexture2DArray* ImageToTexture2DArray(UCLImageObject* image,
 												  UCLCommandQueueObject* queueOverride = nullptr,
+												  bool isSRGB = true,
 												  bool generateMipMaps = false);
 
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Write To RenderTarget2D")

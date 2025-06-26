@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/CLProgram.h"
+#include "Core/CLBuffer.h"
 
 #include <string>
 
@@ -27,7 +28,16 @@ namespace OpenCL
 		bool SetArgument(cl_uint arg_index,
 						 const T& arg_value)
 		{
-			return SetArgument(arg_index, sizeof(T), &arg_value);
+			mIsValid = SetArgument(arg_index, sizeof(T), &arg_value);
+			return mIsValid;
+		}
+
+		template<>
+		bool SetArgument(cl_uint arg_index,
+						 const OpenCL::Buffer& buffer)
+		{
+			mIsValid = buffer.AttachToKernel(mpKernel, arg_index);
+			return mIsValid;
 		}
 
 		bool SetArgument(cl_uint arg_index,

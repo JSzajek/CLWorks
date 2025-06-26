@@ -1,5 +1,8 @@
 #include "Core/CLCommandQueue.h"
 
+#include "Core/CLContext.h"
+#include "Core/CLKernel.h"
+
 #include "Profiler/CLProfilerManager.h"
 
 #include "CLWorksLog.h"
@@ -62,6 +65,7 @@ namespace OpenCL
 		}
 	}
 
+#if 0
 	void CommandQueue::ReadBuffer(const OpenCL::Buffer& buffer, 
 								  size_t data_size, 
 								  void* output,
@@ -100,6 +104,7 @@ namespace OpenCL
 		image.ReadFromCL(&output, mpCommandQueue, isBlocking);
 		return output;
 	}
+#endif
 
 	void CommandQueue::Initialize(cl_context context,
 								  cl_device_id device)
