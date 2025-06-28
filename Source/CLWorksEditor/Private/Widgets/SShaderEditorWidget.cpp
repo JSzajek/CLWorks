@@ -54,11 +54,17 @@ void SShaderEditorWidget::Construct(const FArguments& InArgs)
 		]
 
 		// Error log
-		+ SVerticalBox::Slot().AutoHeight().Padding(2)
+		+ SVerticalBox::Slot().AutoHeight().MaxHeight(100.0f).Padding(2)
 		[
-			SAssignNew(mpErrorLogOutput, SMultiLineEditableTextBox).Text(FText::FromString(""))
-																   .IsReadOnly(true)
-																   .AutoWrapText(true)
+			SNew(SScrollBox)
+				.Orientation(Orient_Vertical)
+
+			+ SScrollBox::Slot()
+			[
+				SAssignNew(mpErrorLogOutput, SMultiLineEditableTextBox).Text(FText::FromString(""))
+																	   .IsReadOnly(true)
+																	   .AutoWrapText(true)
+			]
 		]
 	];
 
@@ -85,7 +91,7 @@ FReply SShaderEditorWidget::OnCompileClicked()
 	{
 		OpenCL::Program program(mpProgramData->mpContext, mpProgramData->mpDevice);
 
-		std::string sourceCode = TCHAR_TO_UTF8(*mpProgramAsset->SourceCode);
+		std::string sourceCode(TCHAR_TO_UTF8(*mpProgramAsset->SourceCode));
 
 		std::string errMsg;
 		success = program.ReadFromString(sourceCode, &errMsg);
