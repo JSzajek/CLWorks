@@ -70,7 +70,8 @@ Represents a 2D or 3D image or image array.
 ![BP Control](./Resources/BP_Control.png)
 
 ### Buffer
-![BP Buffer](./Resources/BP_Buffer.png)
+![BP Buffer Creation](./Resources/BP_Buffer_Creation.png)
+![BP Buffer Read](./Resources/BP_Buffer_Read.png)
 
 ### Image
 ![BP Image](./Resources/BP_Image.png)
@@ -101,7 +102,8 @@ std::vector<float> src_data(count, 0.0f);
 OpenCL::Buffer buffer(context, 
                       src_data.data(), 
                       count * sizeof(float), 
-                      OpenCL::AccessType::READ_WRITE);
+                      OpenCL::AccessType::READ_WRITE,
+                      OpenCL::MemoryStrategy::STREAM);
 ```
 
 #### Texture Creation

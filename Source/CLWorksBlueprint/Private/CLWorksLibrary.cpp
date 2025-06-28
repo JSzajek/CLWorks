@@ -8,35 +8,50 @@ DEFINE_LOG_CATEGORY(LogCLWorksBlueprint);
 
 #define LOCTEXT_NAMESPACE "FCLWorksBlueprintModule"
 
-inline static UCLContextObject* mpGlobalContext = nullptr;
-inline static UCLCommandQueueObject* mpGlobalQueue = nullptr;
+UCLContextObject* UCLWorksLibrary::mpGlobalContext = nullptr;
+UCLCommandQueueObject* UCLWorksLibrary::mpGlobalQueue = nullptr;
 
 void FCLWorksBlueprintModule::StartupModule()
 {
-	UCLWorksLibrary::InitializeLibray();
 }
 
 void FCLWorksBlueprintModule::ShutdownModule()
 {
-	UCLWorksLibrary::DeinitializeLibray();
+}
+
+UCLWorksLibrary::UCLWorksLibrary(const class FObjectInitializer& ObjectInitializer)
+{
+	InitializeLibray();
+}
+
+void UCLWorksLibrary::BeginDestroy()
+{
+	Super::BeginDestroy();
+
+	DeinitializeLibray();
 }
 
 void UCLWorksLibrary::InitializeLibray()
 {
 	mpGlobalContext = UCLWorksLibrary::CreateCustomContext(0);
+	mpGlobalContext->AddToRoot();
+
 	mpGlobalQueue = UCLWorksLibrary::CreateCommandQueue(mpGlobalContext);
+	mpGlobalQueue->AddToRoot();
 }
 
 void UCLWorksLibrary::DeinitializeLibray()
 {
 	if (mpGlobalQueue)
 	{
+		mpGlobalQueue->RemoveFromRoot();
 		mpGlobalQueue->ConditionalBeginDestroy();
 		mpGlobalQueue = nullptr;
 	}
 
 	if (mpGlobalContext)
 	{
+		mpGlobalContext->RemoveFromRoot();
 		mpGlobalContext->ConditionalBeginDestroy();
 		mpGlobalContext = nullptr;
 	}

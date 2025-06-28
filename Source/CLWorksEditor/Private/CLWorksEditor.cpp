@@ -27,13 +27,6 @@ void FCLWorksEditorModule::ShutdownModule()
 {
 	// This function may be called during shutdown to clean up your module.  For modules that support dynamic reloading,
 	// we call this function before unloading the module.
-
-	// Unregister Custom Asset Actions
-	if (AssetActions.IsValid())
-	{
-		IAssetTools& AssetTools = FModuleManager::GetModuleChecked<FAssetToolsModule>("AssetTools").Get();
-		AssetTools.UnregisterAssetTypeActions(AssetActions.ToSharedRef());
-	}
 }
 
 #undef LOCTEXT_NAMESPACE

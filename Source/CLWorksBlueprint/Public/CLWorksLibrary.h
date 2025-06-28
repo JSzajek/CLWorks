@@ -40,8 +40,12 @@ class  UCLWorksLibrary : public UBlueprintFunctionLibrary
 {
 	GENERATED_BODY()
 public:
-	static void InitializeLibray();
-	static void DeinitializeLibray();
+	UCLWorksLibrary(const class FObjectInitializer& ObjectInitializer);
+
+	virtual void BeginDestroy() override;
+public:
+	void InitializeLibray();
+	void DeinitializeLibray();
 public:
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Custom Context")
 	static UCLContextObject* CreateCustomContext(int32 deviceIndex);
@@ -156,4 +160,8 @@ public:
 	static bool WriteToRenderTarget2D(UTextureRenderTarget2D* output,
 									  UCLImageObject* image,
 									  UCLCommandQueueObject* queueOverride = nullptr);
+private:
+	static UCLContextObject* mpGlobalContext;
+
+	static UCLCommandQueueObject* mpGlobalQueue;
 };
