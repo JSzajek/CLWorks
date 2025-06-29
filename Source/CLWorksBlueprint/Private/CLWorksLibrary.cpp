@@ -238,8 +238,9 @@ UCLBufferObject* UCLWorksLibrary::CreateVector4fBuffer(const TArray<FVector4f>& 
 	return buffer;
 }
 
-UCLImageObject* UCLWorksLibrary::CreateImage(int32 width, 
-											 int32 height, 
+UCLImageObject* UCLWorksLibrary::CreateImage(int32 width,
+											 int32 height,
+											 int32 layers,
 											 UCLImageType type, 
 											 UCLImageFormat format, 
 											 UCLAccessType access, 
@@ -264,10 +265,15 @@ UCLImageObject* UCLWorksLibrary::CreateImage(int32 width,
 								access);
 			break;
 		case UCLImageType::Texture2DArray:
-			// TODO:: Implement
+			image->Initialize2DArray(context,
+									 width,
+									 height,
+									 layers,
+									 format,
+									 access);
 			break;
 		case UCLImageType::Texture3D:
-			// TODO:: Implement
+			throw std::exception("Not Implemented!");
 			break;
 	}
 

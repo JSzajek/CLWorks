@@ -97,6 +97,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "OpenCL", DisplayName = "Create Image")
 	static UCLImageObject* CreateImage(int32 width, 
 									   int32 height,
+									   int32 layers = 1,
 									   UCLImageType type = UCLImageType::Texture2D,
 									   UCLImageFormat format = UCLImageFormat::RGBA8,
 									   UCLAccessType access = UCLAccessType::READ_WRITE,
