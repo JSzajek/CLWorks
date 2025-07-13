@@ -9,6 +9,7 @@
 #include "Core/CLKernel.h"
 #include "Core/CLProgram.h"
 #include "Core/CLCommandQueue.h"
+#include "Core/CLEvent.h"
 
 #include "Objects/CLObjectDefines.h"
 #include "Objects/CLContextObject.h"

@@ -16,7 +16,7 @@ CLWorks provides an OpenCL integration plugin for Unreal Engine. Enabling low-le
 
 ## Installation
 1) Clone into your Unreal Engine project `Plugins/` folder.
-    - Example: git clone https://github.com/JSzajek/CLWorks.git Plugins/CLWorks
+    - Example: `git clone https://github.com/JSzajek/CLWorks.git Plugins/CLWorks`
 2) Generate the Visual Studio project files (if necessary).
 
 ## Testing

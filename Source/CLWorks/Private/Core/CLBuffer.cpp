@@ -92,21 +92,25 @@ namespace OpenCL
 					   size_t size, 
 					   size_t offset)
 	{
-		// TODO:: Add Support For Asynchronous Fetching.
-
 		switch (mStrategy)
 		{
 			case MemoryStrategy::COPY_ONCE:
 			{
-				clEnqueueReadBuffer(queue, 
-									mpBuffer, 
-									CL_TRUE, 
-									offset, 
-									size, 
-									output, 
-									0, 
-									nullptr, 
-									nullptr);
+				cl_int err = clEnqueueReadBuffer(queue,
+												 mpBuffer, 
+												 CL_TRUE, 
+												 offset, 
+												 size, 
+												 output, 
+												 0, 
+												 nullptr, 
+												 nullptr);
+
+				if (err < 0)
+				{
+					UE_LOG(LogCLWorks, Error, TEXT("Failed to Read Buffer: %d"), err);
+					return;
+				}
 				break;
 			}
 			case MemoryStrategy::STREAM:
@@ -114,7 +118,7 @@ namespace OpenCL
 				cl_int err;
 				void* hostPtr = clEnqueueMapBuffer(queue, 
 												   mpBuffer, 
-												   CL_TRUE, 
+												   CL_TRUE,
 												   CL_MAP_READ, 
 												   0, 
 												   size, 
@@ -158,6 +162,120 @@ namespace OpenCL
 									0, 
 									nullptr,
 									nullptr);
+				break;
+			}
+		}
+	}
+
+	void Buffer::FetchAsync(const std::shared_ptr<OpenCL::CommandQueue>& queue,
+							const std::function<void()>& callback,
+							void* output,
+							size_t size, 
+							size_t offset)
+	{
+		switch (mStrategy)
+		{
+			case MemoryStrategy::COPY_ONCE:
+			{
+				cl_int err = clEnqueueReadBuffer(queue->Get(),
+												 mpBuffer, 
+												 CL_FALSE, 
+												 offset, 
+												 size, 
+												 output, 
+												 0, 
+												 nullptr, 
+												 &mReadbackEvent.mpEvent);
+
+				if (err < 0)
+				{
+					UE_LOG(LogCLWorks, Error, TEXT("Failed to Read Buffer: %d"), err);
+					return;
+				}
+
+				mReadbackEvent.SetOnCompleteCallback([callback]()
+				{
+					callback();
+				});
+				break;
+			}
+			case MemoryStrategy::STREAM:
+			{
+				cl_int err;
+				void* hostPtr = clEnqueueMapBuffer(queue->Get(), 
+												   mpBuffer, 
+												   CL_FALSE,
+												   CL_MAP_READ, 
+												   0, 
+												   size, 
+												   0,
+												   nullptr, 
+												   &mReadbackEvent.mpEvent,
+												   &err);
+
+				if (err < 0)
+				{
+					UE_LOG(LogCLWorks, Error, TEXT("Failed to Map Buffer: %d"), err);
+					return;
+				}
+
+				std::weak_ptr<CommandQueue> queuePtr = queue;
+				mReadbackEvent.SetOnCompleteCallback([hostPtr, callback, queuePtr, output, offset, size, this]()
+				{
+					std::shared_ptr<OpenCL::CommandQueue> queue = queuePtr.lock();
+					if (queue)
+					{
+						std::memcpy(output, (uint8_t*)hostPtr + offset, size);
+
+						clEnqueueUnmapMemObject(queue->Get(),
+											    mpBuffer,
+											    hostPtr,
+											    0,
+											    nullptr,
+											    nullptr);
+					}
+
+					callback();
+				});
+
+				
+				break;
+			}
+			case MemoryStrategy::ZERO_COPY:
+			{
+				cl_int err = clEnqueueSVMMap(queue->Get(),
+											 CL_FALSE, 
+											 CL_MAP_WRITE, 
+											 mpSVMPtr, 
+											 size, 
+											 0,
+											 nullptr, 
+											 &mReadbackEvent.mpEvent);
+
+				if (err < 0)
+				{
+					UE_LOG(LogCLWorks, Error, TEXT("Failed to Map Buffer: %d"), err);
+					return;
+				}
+
+				std::weak_ptr<CommandQueue> queuePtr = queue;
+				mReadbackEvent.SetOnCompleteCallback([callback, queuePtr, output, offset, size, this]()
+				{
+					std::shared_ptr<OpenCL::CommandQueue> queue = queuePtr.lock();
+					if (queue)
+					{
+						uint8_t* pt = (uint8_t*)mpSVMPtr + offset;
+						memcpy(output, pt, size);
+
+						clEnqueueSVMUnmap(queue->Get(),
+										  mpSVMPtr,
+										  0, 
+										  nullptr,
+										  nullptr);
+					}
+
+					callback();
+				});
 				break;
 			}
 		}

@@ -2,10 +2,11 @@
 
 #include "OpenCLLib.h"
 
+#include "Core/CLCore.h"
 #include "Core/CLDevice.h"
 #include "Core/CLContext.h"
 #include "Core/CLCommandQueue.h"
-#include "Core/CLCore.h"
+#include "Core/CLEvent.h"
 
 namespace OpenCL
 {
@@ -32,9 +33,15 @@ namespace OpenCL
 		bool IsValid() const { return mpBuffer || mpSVMPtr; }
 	public:
 		void Fetch(const OpenCL::CommandQueue& queue,
-				   void* src, 
+				   void* output,
 				   size_t size, 
 				   size_t offset = 0);
+
+		void FetchAsync(const std::shared_ptr<OpenCL::CommandQueue>& queue,
+						const std::function<void()>& callback,
+						void* output, 
+						size_t size, 
+						size_t offset = 0);
 
 		void Upload(const OpenCL::CommandQueue& queue,
 				    const void* src, 
@@ -54,5 +61,7 @@ namespace OpenCL
 
 		AccessType mAccess = AccessType::INVALID;
 		MemoryStrategy mStrategy = MemoryStrategy::INVALID;
+
+		Event mReadbackEvent;
 	};
 }
