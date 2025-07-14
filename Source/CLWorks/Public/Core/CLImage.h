@@ -8,6 +8,7 @@
 #include <functional>
 
 class UTexture2D;
+class UTextureRenderTarget2D;
 class UTexture2DArray;
 class UVolumeTexture;
 

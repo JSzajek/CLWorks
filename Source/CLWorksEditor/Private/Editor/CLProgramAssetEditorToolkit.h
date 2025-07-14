@@ -1,5 +1,7 @@
 #pragma once
 
+#if WITH_EDITOR
+
 #include "CoreMinimal.h"
 
 #include "Toolkits/AssetEditorToolkit.h"
@@ -42,3 +44,5 @@ private:
 
 	TObjectPtr<UCLProgramAsset> mpProgramAsset;
 };
+
+#endif

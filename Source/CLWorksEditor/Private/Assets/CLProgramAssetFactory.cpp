@@ -1,5 +1,7 @@
 #include "CLProgramAssetFactory.h"
 
+#if WITH_EDITOR
+
 #include "Assets/CLProgramAsset.h"
 
 UCLProgramAssetFactory::UCLProgramAssetFactory(const FObjectInitializer& ObjectInitializer)
@@ -26,3 +28,4 @@ UObject* UCLProgramAssetFactory::FactoryCreateNew(UClass* Class,
 	return NewAsset;
 }
 
+#endif

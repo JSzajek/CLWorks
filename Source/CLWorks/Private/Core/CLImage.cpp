@@ -13,6 +13,7 @@
 
 #include "RHICommandList.h"
 #include "Render/UTextureUtils.h"
+#include "TextureResource.h"
 
 namespace OpenCL
 {

@@ -1,9 +1,13 @@
 #pragma once
 
+#if WITH_EDITOR
+
 #include "CoreMinimal.h"
+
 #include "Factories/Factory.h"
 
 #include "CLProgramAssetFactory.generated.h"
+
 
 UCLASS()
 class CLWORKSEDITOR_API UCLProgramAssetFactory : public UFactory
@@ -19,3 +23,5 @@ public:
 									  UObject* Context, 
 									  FFeedbackContext* Warn) override;
 };
+
+#endif

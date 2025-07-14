@@ -22,7 +22,7 @@
 		},
 		{
 			"Name": "CLWorksEditor",
-			"Type": "Runtime",
+			"Type": "Editor",
 			"LoadingPhase": "PreLoadingScreen"
 		},
 		{

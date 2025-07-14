@@ -3,6 +3,8 @@
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
 
+#include "Engine/DataAsset.h"
+
 #include "Core/CLKernel.h"
 
 #include "CLProgramAsset.generated.h"

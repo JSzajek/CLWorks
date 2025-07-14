@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Engine/Texture.h"
 
 #include "Objects/CLObjectDefines.h"
 #include "Objects/CLContextObject.h"

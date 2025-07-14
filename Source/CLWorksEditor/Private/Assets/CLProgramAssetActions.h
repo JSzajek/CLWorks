@@ -1,5 +1,7 @@
 #pragma once
 
+#if WITH_EDITOR
+
 #include "AssetTypeActions_Base.h"
 
 #include "Assets/CLProgramAsset.h"
@@ -37,3 +39,5 @@ public:
 private:
 	EAssetTypeCategories::Type mCategory;
 };
+
+#endif

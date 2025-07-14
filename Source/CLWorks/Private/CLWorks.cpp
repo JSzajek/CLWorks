@@ -5,6 +5,9 @@
 #include "Interfaces/IPluginManager.h"
 #include "Profiler/CLProfilerManager.h"
 
+#include "Misc/Paths.h"
+#include "ShaderCore.h"
+
 #define LOCTEXT_NAMESPACE "FCLWorksModule"
 
 void FCLWorksModule::StartupModule()

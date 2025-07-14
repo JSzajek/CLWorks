@@ -4,6 +4,9 @@
 #include "RenderGraphUtils.h"
 
 #include "Render/BlitTextureShaders.h"
+#include "TextureResource.h"
+#include "RHIStaticStates.h"
+#include "Async/Async.h"
 
 namespace UTextureUtils
 {

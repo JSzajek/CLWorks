@@ -1,5 +1,8 @@
 #include "Assets/CLProgramAssetActions.h"
 
+
+#if WITH_EDITOR
+
 #include "Editor/CLProgramAssetEditorToolkit.h"
 
 void FCLProgramAssetActions::OpenAssetEditor(const TArray<UObject*>& InObjects, 
@@ -14,3 +17,5 @@ void FCLProgramAssetActions::OpenAssetEditor(const TArray<UObject*>& InObjects,
 		}
 	}
 }
+
+#endif
