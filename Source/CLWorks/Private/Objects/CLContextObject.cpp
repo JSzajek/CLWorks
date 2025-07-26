@@ -28,14 +28,14 @@ bool UCLContextObject::HasImageSupport() const
 	return false;
 }
 
-const std::shared_ptr<OpenCL::Device> UCLContextObject::GetDevice() const
+const OpenCL::DevicePtr UCLContextObject::GetDevice() const
 {
 	if (mpDevice)
 		return mpDevice;
 	return nullptr;
 }
 
-const std::shared_ptr<OpenCL::Context> UCLContextObject::GetContext() const
+const OpenCL::ContextPtr UCLContextObject::GetContext() const
 {
 	if (mpContext)
 		return mpContext;

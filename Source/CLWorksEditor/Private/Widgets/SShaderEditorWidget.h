@@ -4,11 +4,7 @@
 #include "Widgets//SLineNumberBox.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
 
-namespace OpenCL
-{
-	class Device;
-	class Context;
-}
+#include "CLWorksLib.h"
 
 class UCLProgramAsset;
 
@@ -41,8 +37,8 @@ private:
 	public:
 		ProgramData() = default;
 	public:
-		std::shared_ptr<OpenCL::Device> mpDevice = nullptr;
-		std::shared_ptr<OpenCL::Context> mpContext = nullptr;
+		OpenCL::DevicePtr mpDevice = nullptr;
+		OpenCL::ContextPtr mpContext = nullptr;
 	};
 	TSharedPtr<ProgramData> mpProgramData;
 };

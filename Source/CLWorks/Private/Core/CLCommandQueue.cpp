@@ -16,8 +16,8 @@ namespace OpenCL
 
 	}
 
-	CommandQueue::CommandQueue(const std::shared_ptr<OpenCL::Context>& context, 
-							   const std::shared_ptr<OpenCL::Device>& device)
+	CommandQueue::CommandQueue(const OpenCL::ContextPtr& context, 
+							   const OpenCL::DevicePtr& device)
 		: mpCommandQueue(nullptr),
 		mpContext(context),
 		mpAttachedDevice(device),
@@ -64,47 +64,6 @@ namespace OpenCL
 			mIsValid = false;
 		}
 	}
-
-#if 0
-	void CommandQueue::ReadBuffer(const OpenCL::Buffer& buffer, 
-								  size_t data_size, 
-								  void* output,
-								  bool isBlocking)
-	{
-		int32_t err = clEnqueueReadBuffer(mpCommandQueue,
-										  buffer.Get(),
-										  isBlocking ? CL_TRUE : CL_FALSE,
-										  0,
-										  data_size,
-										  output,
-										  0,
-										  NULL,
-										  NULL);
-
-		if (err < 0)
-		{
-			UE_LOG(LogCLWorks, Error, TEXT("Couldn't Read the Buffer: %d"), err);
-			mIsValid = false;
-		}
-	}
-
-	void CommandQueue::ReadImageTo(const OpenCL::Image& image, 
-								   void* output, 
-								   bool isBlocking)
-	{
-		image.ReadFromCL(&output, 
-						 mpCommandQueue, 
-						 isBlocking);
-	}
-
-	void* CommandQueue::ReadImage(const OpenCL::Image& image, 
-								  bool isBlocking)
-	{
-		void* output = nullptr;
-		image.ReadFromCL(&output, mpCommandQueue, isBlocking);
-		return output;
-	}
-#endif
 
 	void CommandQueue::Initialize(cl_context context,
 								  cl_device_id device)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/CLDevice.h"
+#include "Core/CLContext.h"
 
 #include <memory>
 
@@ -14,8 +15,8 @@ namespace OpenCL
 	public:
 		CommandQueue();
 
-		CommandQueue(const std::shared_ptr<OpenCL::Context>& context, 
-					 const std::shared_ptr<OpenCL::Device>& device);
+		CommandQueue(const OpenCL::ContextPtr& context, 
+					 const OpenCL::DevicePtr& device);
 
 		~CommandQueue();
 	public:
@@ -32,20 +33,6 @@ namespace OpenCL
 						  size_t work_dim, 
 						  const size_t* global_work_size,
 						  const size_t* local_work_size = nullptr);
-
-	#if 0
-		void ReadBuffer(const OpenCL::Buffer& buffer, 
-						size_t data_size, 
-						void* output,
-						bool isBlocking = true);
-
-		void ReadImageTo(const OpenCL::Image& image,
-						 void* output,
-						 bool isBlocking = true);
-
-		void* ReadImage(const OpenCL::Image& image,
-					    bool isBlocking = true);
-	#endif
 	private:
 		void Initialize(cl_context context, 
 						cl_device_id device);

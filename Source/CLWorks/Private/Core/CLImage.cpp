@@ -17,13 +17,6 @@
 
 namespace OpenCL
 {
-	Image::Image()
-		: mpImage(nullptr),
-		mpContext(),
-		mpDevice()
-	{
-	}
-
 	Image::Image(const std::shared_ptr<OpenCL::Context>& context, 
 				 const std::shared_ptr<OpenCL::Device>& device,
 				 uint32_t width,
@@ -69,7 +62,7 @@ namespace OpenCL
 		return 0;
 	}
 
-	size_t Image::GetChannelDataSize() const
+	size_t Image::GetTypeDataSize() const
 	{
 		if ((mFormat & Format::UChar) > 0)
 			return sizeof(uint8_t);
@@ -81,17 +74,6 @@ namespace OpenCL
 			return sizeof(FFloat16);
 		else if ((mFormat & Format::Float) > 0)
 			return sizeof(float);
-		return 0;
-	}
-
-	size_t Image::GetDataSize() const
-	{
-		if ((mFormat & Format::UChar) > 0)
-			return GetPixelCount() * GetChannelCount() * sizeof(uint8_t);
-		else if ((mFormat & Format::HalfFloat) > 0)
-			return GetPixelCount() * GetChannelCount() * sizeof(FFloat16);
-		else if ((mFormat & Format::Float) > 0)
-			return GetPixelCount() * GetChannelCount() * sizeof(float);
 		return 0;
 	}
 
@@ -578,7 +560,7 @@ namespace OpenCL
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2D());
 
-		const size_t channelDataSize = GetChannelDataSize();
+		const size_t channelDataSize = GetTypeDataSize();
 		const uint8_t channelCount = GetChannelCount();
 
 		std::vector<Mip> mips;
@@ -648,7 +630,7 @@ namespace OpenCL
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2D_Async());
 
-		const size_t channelDataSize = GetChannelDataSize();
+		const size_t channelDataSize = GetTypeDataSize();
 		const uint8_t channelCount = GetChannelCount();
 
 		std::vector<Mip> mips;
@@ -755,7 +737,7 @@ namespace OpenCL
 	{
 		TRACE_CPUPROFILER_EVENT_SCOPE(Image::WriteToUTexture2DArray());
 
-		const size_t channelDataSize = GetChannelDataSize();
+		const size_t channelDataSize = GetTypeDataSize();
 		const uint8_t channelCount = GetChannelCount();
 
 		std::vector<Mip> mips;

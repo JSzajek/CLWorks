@@ -23,12 +23,12 @@ public:
 
 	bool HasImageSupport() const;
 
-	const std::shared_ptr<OpenCL::Device> GetDevice() const;
-	const std::shared_ptr<OpenCL::Context> GetContext() const;
+	const OpenCL::DevicePtr GetDevice() const;
+	const OpenCL::ContextPtr GetContext() const;
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "CLWorks")
 	int32 DeviceIndex = 0;
 private:
-	std::shared_ptr<OpenCL::Device> mpDevice = nullptr;
-	std::shared_ptr<OpenCL::Context> mpContext = nullptr;
+	OpenCL::DevicePtr mpDevice = nullptr;
+	OpenCL::ContextPtr mpContext = nullptr;
 };

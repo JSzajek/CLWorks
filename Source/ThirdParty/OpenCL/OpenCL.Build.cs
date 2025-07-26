@@ -3,16 +3,11 @@ using System.IO;
 
 public class OpenCL : ModuleRules
 {
-	protected virtual bool IsSupportedWindowsPlatform(ReadOnlyTargetRules Target)
-	{
-		return Target.Platform == UnrealTargetPlatform.Win64;
-	}
-
 	public OpenCL(ReadOnlyTargetRules Target) : base(Target)
 	{
 		Type = ModuleType.External;
 
-		if (IsSupportedWindowsPlatform(Target))
+		if (Target.Platform == UnrealTargetPlatform.Win64)
 		{
             System.Console.WriteLine("Linking OpenCL Library.");
 

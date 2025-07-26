@@ -19,12 +19,12 @@ namespace OpenCL
 
 		~Program();
 	public:
+		cl_program Get() const { return mpProgram; };
+	public:
 		bool ReadFromFile(const std::filesystem::path& file, 
 						  std::string* errMsg = nullptr);
 		bool ReadFromString(const std::string& program, 
 							std::string* errMsg = nullptr);
-
-		cl_program Get() const { return mpProgram; };
 	private:
 		bool SetupProgramFromString(const std::string& programString,
 									std::string* errMsg);

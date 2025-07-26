@@ -4,18 +4,14 @@
 
 namespace OpenCL
 {
-	Buffer::Buffer()
-		: mpBuffer(nullptr)
-	{
-	}
-
 	Buffer::Buffer(const std::shared_ptr<Device>& device,
 				   const std::shared_ptr<Context>& context,
 				   void* dataPtr,
 				   size_t dataSize,
 				   AccessType access,
 				   MemoryStrategy strategy)
-		: mpBuffer(nullptr),
+		: mDataSize(0),
+		mpBuffer(nullptr),
 		mpSVMPtr(nullptr),
 		mAccess(access),
 		mStrategy(strategy)
@@ -76,6 +72,8 @@ namespace OpenCL
 				break;
 			}
 		}
+
+		mDataSize = dataSize;
 	}
 
 	Buffer::~Buffer()

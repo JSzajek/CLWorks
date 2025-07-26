@@ -16,7 +16,7 @@ namespace OpenCL
 	{
 		friend Kernel;
 	public:
-		Buffer();
+		Buffer() = default;
 
 		Buffer(const std::shared_ptr<Device>& device,
 			   const std::shared_ptr<Context>& context,
@@ -31,6 +31,8 @@ namespace OpenCL
 		cl_mem Get() const { return mpBuffer; }
 
 		bool IsValid() const { return mpBuffer || mpSVMPtr; }
+
+		size_t Size() const { return mDataSize; }
 	public:
 		void Fetch(const OpenCL::CommandQueue& queue,
 				   void* output,
@@ -56,8 +58,10 @@ namespace OpenCL
 		bool AttachToKernel(cl_kernel kernel, 
 							cl_uint arg_index) const;
 	private:
-		cl_mem mpBuffer;
-		void* mpSVMPtr;
+		size_t mDataSize = 0;
+
+		cl_mem mpBuffer = nullptr;
+		void* mpSVMPtr = nullptr;
 
 		AccessType mAccess = AccessType::INVALID;
 		MemoryStrategy mStrategy = MemoryStrategy::INVALID;

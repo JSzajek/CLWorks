@@ -75,10 +75,10 @@ namespace OpenCL
 			COUNT
 		};
 	public:
-		Image();
+		Image() = default;
 
-		Image(const std::shared_ptr<OpenCL::Context>& context,
-			  const std::shared_ptr<OpenCL::Device>& device,
+		Image(const OpenCL::ContextPtr& context,
+			  const OpenCL::DevicePtr& device,
 			  uint32_t width,
 			  uint32_t height,
 			  uint32_t depthOrLayer = 1,
@@ -87,15 +87,24 @@ namespace OpenCL
 			  AccessType access = AccessType::READ_WRITE);
 	public:
 		cl_mem Get() const { return mpImage; }
+		operator cl_mem() const { return mpImage; }
 
 		uint32_t GetWidth() const { return mWidth; }
 		uint32_t GetHeight() const { return mHeight; }
 
 		size_t GetPixelCount() const;
 		uint8_t GetChannelCount() const;
-		size_t GetChannelDataSize() const;
-		size_t GetDataSize() const;
+		size_t GetTypeDataSize() const;
+		inline size_t GetChannelDataSize() const
+		{
+			return GetChannelCount() * GetTypeDataSize();
+		}
 
+		inline size_t GetDataSize() const
+		{
+			return GetPixelCount() * GetChannelDataSize();
+		}
+	public:
 		TObjectPtr<UTexture2D> CreateUTexture2D(const OpenCL::CommandQueue& queue,
 												bool isSRGB = true,
 												bool genMips = false,

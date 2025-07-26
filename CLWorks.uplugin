@@ -18,17 +18,26 @@
 		{
 			"Name": "CLWorks",
 			"Type": "Runtime",
-			"LoadingPhase": "EarliestPossible"
+			"LoadingPhase": "EarliestPossible",
+			"PlatformAllowList": [
+				"Win64"
+			]
 		},
 		{
 			"Name": "CLWorksEditor",
 			"Type": "Editor",
-			"LoadingPhase": "PreLoadingScreen"
+			"LoadingPhase": "PreLoadingScreen",
+			"PlatformAllowList": [
+				"Win64"
+			]
 		},
 		{
 			"Name": "CLWorksBlueprint",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"PlatformAllowList": [
+				"Win64"
+			]
 		}
 	]
 }
