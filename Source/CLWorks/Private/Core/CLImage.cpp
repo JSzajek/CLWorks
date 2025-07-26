@@ -464,23 +464,23 @@ namespace OpenCL
 		{
 			if ((mFormat & Format::UChar) > 0)
 			{
-				data = new uint8_t[pixelCount * channelCount * mDepthOrLayer];
+				data = new uint8_t[pixelCount * channelCount];
 			}
 			else if ((mFormat & Format::UInt) > 0)
 			{
-				data = new uint32_t[pixelCount * channelCount * mDepthOrLayer];
+				data = new uint32_t[pixelCount * channelCount];
 			}
 			else if ((mFormat & Format::SInt) > 0)
 			{
-				data = new int32_t[pixelCount * channelCount * mDepthOrLayer];
+				data = new int32_t[pixelCount * channelCount];
 			}
 			else if ((mFormat & Format::HalfFloat) > 0)
 			{
-				data = new FFloat16[pixelCount * channelCount * mDepthOrLayer];
+				data = new FFloat16[pixelCount * channelCount];
 			}
 			else if ((mFormat & Format::Float) > 0)
 			{
-				data = new float[pixelCount * channelCount * mDepthOrLayer];
+				data = new float[pixelCount * channelCount];
 			}
 			else
 			{
@@ -701,12 +701,12 @@ namespace OpenCL
 
 				FUpdateTextureRegion2D& region = regions[BatchIndex];
 
-				region.DestX = 0;
-				region.DestY = TargetY;
-				region.SrcX = 0;
-				region.SrcY = TargetY;
-				region.Width = mip.mWidth;
-				region.Height = BatchHeight;
+				region.DestX	= 0;
+				region.DestY	= TargetY;
+				region.SrcX		= 0;
+				region.SrcY		= TargetY;
+				region.Width	= mip.mWidth;
+				region.Height	= BatchHeight;
 			}
 
 			texture->UpdateTextureRegions(MipIndex,
