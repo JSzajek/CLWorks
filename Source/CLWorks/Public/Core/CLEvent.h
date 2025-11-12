@@ -2,6 +2,8 @@
 
 #include "OpenCLLib.h"
 
+#include <functional>
+
 namespace OpenCL
 {
 	class CLWORKS_API Event

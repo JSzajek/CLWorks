@@ -3,6 +3,7 @@
 #include "OpenCLLib.h"
 
 #include <string>
+#include <memory>
 
 namespace OpenCL
 {
